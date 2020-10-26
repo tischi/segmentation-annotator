@@ -30,12 +30,10 @@ package de.embl.cba.ide;
 
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
-import de.embl.cba.tables.image.FileImageSourcesModelFactory;
 import de.embl.cba.tables.imagesegment.SegmentProperty;
 import de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import ij.gui.GenericDialog;
 
 import java.io.File;
 import java.util.LinkedHashMap;
@@ -46,42 +44,27 @@ import static de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDia
 
 public class TableRowImageSegmentsFromTableCreator
 {
-	private final File tableFile;
+	private final String tablePath;
 	private boolean isOneBasedTimePoint; // ...or zero based
 
-	public TableRowImageSegmentsFromTableCreator( File tableFile, boolean isOneBasedTimePoint )
+	public TableRowImageSegmentsFromTableCreator( String tablePath, boolean isOneBasedTimePoint )
 	{
-		this.tableFile = tableFile;
+		this.tablePath = tablePath;
 		this.isOneBasedTimePoint = isOneBasedTimePoint;
 	}
 
 	public List< TableRowImageSegment > createTableRows()
 	{
-		Logger.info("Creating image segments table from file: " + tableFile );
+		Logger.info("Creating image segments table from file: " + tablePath );
 
-		final List< TableRowImageSegment > tableRowImageSegments = createSegments( tableFile, isOneBasedTimePoint );
+		final List< TableRowImageSegment > tableRowImageSegments = createTableRowImageSegments( tablePath, isOneBasedTimePoint );
 
 		return tableRowImageSegments;
 	}
 
-
-	public boolean showImageChoiceDialog( FileImageSourcesModelFactory< TableRowImageSegment > factory )
+	private static List< TableRowImageSegment > createTableRowImageSegments( String tablePath, boolean isOneBasedTimePoint )
 	{
-		final Map< String, String > imageNameToPathColumnName = factory.getImageNameToPathColumnName();
-		final GenericDialog gd = new GenericDialog( "Show images" );
-		for( String image : imageNameToPathColumnName.keySet() )
-			gd.addCheckbox( image, true );
-		gd.showDialog();
-		if ( gd.wasCanceled() ) return false;
-		for( String image : imageNameToPathColumnName.keySet()  )
-			if( ! gd.getNextBoolean() )
-				factory.excludeImage( image );
-		return true;
-	}
-
-	private static List< TableRowImageSegment > createSegments( File tablePath, boolean isOneBasedTimePoint )
-	{
-		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath.toString() );
+		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath );
 
 		final SegmentPropertyColumnsSelectionDialog selectionDialog = new SegmentPropertyColumnsSelectionDialog( columnNameToColumnEntries.keySet() );
 		Map< SegmentProperty, String > segmentPropertyToColumnName = selectionDialog.fetchUserInput();
@@ -109,6 +92,4 @@ public class TableRowImageSegmentsFromTableCreator
 
 		return segmentPropertyToColumnEntries;
 	}
-
-
 }
