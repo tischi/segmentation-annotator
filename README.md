@@ -1,1 +1,1 @@
-# image-dataset-explorer
+# segmentations-explorer
