@@ -113,6 +113,19 @@
 			<version>0.5.5-SNAPSHOT</version>
 		</dependency>
 
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-playground</artifactId>
+			<version>0.2.6-SNAPSHOT</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>ch.epfl.biop</groupId>
+			<artifactId>bigdataviewer-bioformats</artifactId>
+			<version>0.2.7-SNAPSHOT</version>
+		</dependency>
+
 	</dependencies>
 
 </project>
