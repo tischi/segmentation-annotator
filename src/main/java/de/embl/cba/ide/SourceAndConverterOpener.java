@@ -6,6 +6,7 @@ import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.command.OpenFilesWithBigdataviewerBioformatsBridgeCommand;
 import ch.epfl.biop.bdv.bioformats.export.spimdata.BioFormatsConvertFilesToSpimData;
+import loci.common.DebugTools;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,6 +19,7 @@ public class SourceAndConverterOpener
 {
 	public SourceAndConverterOpener()
 	{
+		DebugTools.setRootLevel("OFF");
 	}
 
 	public List< SourceAndConverter< ? > > open( final String imagePath )
