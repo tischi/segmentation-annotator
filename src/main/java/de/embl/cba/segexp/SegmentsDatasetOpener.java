@@ -1,20 +1,20 @@
 package de.embl.cba.segexp;
 
-import bdv.util.BdvHandle;
+import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
-import sc.fiji.bdvpg.services.SourceAndConverterServices;
-import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class SegmentsDatasetOpener
 {
-	private List< SourceAndConverter< ? > > sourceAndConverters;
-	private List< TableRowImageSegment > tableRows;
+	private List< SourceAndConverter< ? > > sources;
+	private List< TableRowImageSegment > segments;
+	private HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId;
 
 	public SegmentsDatasetOpener()
 	{
@@ -24,18 +24,48 @@ public class SegmentsDatasetOpener
 	{
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
 
-		TableRowImageSegmentsFromTableCreator creator = new TableRowImageSegmentsFromTableCreator( tablePath, isOneBasedTimePoint );
-		tableRows = creator.createTableRows();
+		SegmentsCreator segmentsCreator = new SegmentsCreator( tablePath, isOneBasedTimePoint );
+		segments = segmentsCreator.createSegments();
+		String labelImageColumnName = segmentsCreator.getLabelImageColumnName();
 
-		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor<>( tableRows, rootDirectory, "image_path_" );
-		List< String > imagePaths = imagePathsExtractor.extractImagePaths();
+		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, rootDirectory, "image_path_", labelImageColumnName );
+		Set< String > imagePaths = imagePathsExtractor.getImagePaths();
+		HashMap< String, String > imagePathToLabelImageId = imagePathsExtractor.getImagePathToLabelImageId();
 
 		SourceAndConverterOpener opener = new SourceAndConverterOpener();
-		sourceAndConverters = new ArrayList<>( );
-		for ( String imagePath : imagePaths )
+		sources = new ArrayList<>( );
+		sourceToLabelImageId = new HashMap<>();
+		imagePaths.forEach( imagePath ->
 		{
-			List< SourceAndConverter< ? > > sources = opener.open( imagePath );
-			sources.forEach( s -> sourceAndConverters.add( s ) );
-		}
+			List< SourceAndConverter< ? > > sourcesFromImagePath = opener.open( imagePath );
+
+			if ( imagePathToLabelImageId.keySet().contains( imagePath ) )
+			{
+				if ( sourcesFromImagePath.size() > 1 )
+					throw new UnsupportedOperationException( "Label mask images must not contain multiple channels!" );
+
+				sourceToLabelImageId.put( sourcesFromImagePath.get( 0 ), imagePathToLabelImageId.get( imagePath ) );
+			}
+
+			sourcesFromImagePath.forEach( sourceFromImagePath ->
+			{
+				sources.add( sourceFromImagePath );
+			} );
+		} );
+	}
+
+	public List< SourceAndConverter< ? > > getSources()
+	{
+		return sources;
+	}
+
+	public List< TableRowImageSegment > getSegments()
+	{
+		return segments;
+	}
+
+	public HashMap< SourceAndConverter< ? >, String > getSourceToLabelImageId()
+	{
+		return sourceToLabelImageId;
 	}
 }

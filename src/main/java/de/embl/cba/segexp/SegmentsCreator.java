@@ -41,18 +41,19 @@ import java.util.Map;
 
 import static de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog.NO_COLUMN_SELECTED;
 
-public class TableRowImageSegmentsFromTableCreator
+public class SegmentsCreator
 {
 	private final String tablePath;
 	private boolean isOneBasedTimePoint; // ...or zero based
+	private String labelImageColumnName;
 
-	public TableRowImageSegmentsFromTableCreator( String tablePath, boolean isOneBasedTimePoint )
+	public SegmentsCreator( String tablePath, boolean isOneBasedTimePoint )
 	{
 		this.tablePath = tablePath;
 		this.isOneBasedTimePoint = isOneBasedTimePoint;
 	}
 
-	public List< TableRowImageSegment > createTableRows()
+	public List< TableRowImageSegment > createSegments()
 	{
 		Logger.info("Creating image segments table from file: " + tablePath );
 
@@ -61,12 +62,19 @@ public class TableRowImageSegmentsFromTableCreator
 		return tableRowImageSegments;
 	}
 
-	private static List< TableRowImageSegment > createTableRowImageSegments( String tablePath, boolean isOneBasedTimePoint )
+	public String getLabelImageColumnName()
+	{
+		return labelImageColumnName;
+	}
+
+	private List< TableRowImageSegment > createTableRowImageSegments( String tablePath, boolean isOneBasedTimePoint )
 	{
 		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath );
 
 		final SegmentPropertyColumnsSelectionDialog selectionDialog = new SegmentPropertyColumnsSelectionDialog( columnNameToColumnEntries.keySet() );
 		Map< SegmentProperty, String > segmentPropertyToColumnName = selectionDialog.fetchUserInput();
+
+		labelImageColumnName = segmentPropertyToColumnName.get( SegmentProperty.LabelImage );
 
 		final Map< SegmentProperty, List< String > > segmentPropertyToColumnEntries = createSegmentPropertyToColumnEntriesMap( segmentPropertyToColumnName, columnNameToColumnEntries  );
 
