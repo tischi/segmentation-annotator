@@ -64,7 +64,6 @@ import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static de.embl.cba.bdv.utils.converters.SelectableVolatileARGBConverter.BACKGROUND;
 
@@ -72,7 +71,7 @@ import static de.embl.cba.bdv.utils.converters.SelectableVolatileARGBConverter.B
 public class SegmentedImagesViewer< T extends ImageSegment >
 {
 	private final SelectionColoringModel< T > selectionColoringModel;
-	private List< SourceAndConverter< ? > > sources;
+	private HashMap< String, Set< SourceAndConverter< ? > > > groupNameToSources;
 	private HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId;
 	private final SelectionModel< T > selectionModel;
 
@@ -108,15 +107,15 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 	private Set< SourceAndConverter< ? > > labelSources;
 
 	public SegmentedImagesViewer(
-			final List< T > segments,
-			final SelectionColoringModel< T > selectionColoringModel,
-			final List< SourceAndConverter< ? > > sources,
-			HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId )
+			final List segments,
+			final SelectionColoringModel selectionColoringModel,
+			final HashMap< String, Set< SourceAndConverter< ? > > > groupNameToSources,
+			final HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId )
 	{
 		this.segments = segments;
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();
-		this.sources = sources;
+		this.groupNameToSources = groupNameToSources;
 		this.sourceToLabelImageId = sourceToLabelImageId;
 
 		this.labelSourceSingleColor = new ARGBType( ARGBType.rgba( 255, 255, 255, 255 ) );;
@@ -140,9 +139,10 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 
 	private void configureLabelMaskSources()
 	{
-		sources = sources.stream().map( source -> {
-			if ( sourceToLabelImageId.keySet().contains( source ) )
-			{
+		Set< SourceAndConverter< ? > > labelsSources = new HashSet<>( sourceToLabelImageId.keySet() );
+
+		labelsSources.stream().forEach( source ->
+		{
 				String labelImageId = sourceToLabelImageId.get( source );
 				SegmentsARGBConverter labelsARGBConverter = new SegmentsARGBConverter(
 						labelFrameAndImageToSegment,
@@ -154,22 +154,28 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 				// the source object has changed => replace in the map
 				sourceToLabelImageId.remove( source );
 				sourceToLabelImageId.put(labelMaskSource, labelImageId );
-				return labelMaskSource;
-			} else
-			{
-				return source;
-			}
-		} ).collect( Collectors.toList() );
+		} );
 	}
 
 	private void showImages()
 	{
 		bdvHandle = SourceAndConverterServices.getSourceAndConverterDisplayService().getActiveBdv();
 
-		sources.forEach( sac -> {
-			SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, sac );
-			new ViewerTransformAdjuster( bdvHandle, sac ).run();
-			new BrightnessAutoAdjuster( sac, 0 ).run();
+		groupNameToSources.keySet().forEach( groupName ->
+		{
+			groupNameToSources.get( groupName ).forEach( source ->
+			{
+				// group in terms of B&C
+				SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
+				new ViewerTransformAdjuster( bdvHandle, source ).run();
+				new BrightnessAutoAdjuster( source, 0 ).run();
+			} );
+		} );
+
+		sourceToLabelImageId.keySet().forEach( source -> {
+			SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
+			new ViewerTransformAdjuster( bdvHandle, source ).run();
+			new BrightnessAutoAdjuster( source, 0 ).run();
 		} );
 	}
 

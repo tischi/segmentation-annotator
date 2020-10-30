@@ -30,12 +30,7 @@ package de.embl.cba.segexp;
 
 import de.embl.cba.tables.tablerow.TableRow;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 {
@@ -43,8 +38,8 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 	private final String imageRootDirectory;
 	private final String labelImageColumnName;
 	private final Set< String > imageColumnNames;
-	private Set< String > imagePaths;
-	private HashMap< String, String > imagePathToLabelImageId;
+	private Map< String, Set< String > > columnNameToImagePaths;
+	private Set< String > labelImagePaths;
 
 	public ImagePathsFromTableRowsExtractor( final List< T > tableRows, final String imagesRootFolder, String labelImageColumnName, final String imageColumnsIdentifier )
 	{
@@ -52,7 +47,6 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 		this.imageRootDirectory = imagesRootFolder;
 		this.labelImageColumnName = labelImageColumnName;
 		this.imageColumnNames = fetchImageColumnNames( tableRows, imageColumnsIdentifier );
-		this.imageColumnNames.add( labelImageColumnName );
 		extractImagePaths();
 	}
 
@@ -62,35 +56,41 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 		this.imageRootDirectory = imageRootDirectory;
 		this.labelImageColumnName = labelImageColumnName;
 		this.imageColumnNames = imageColumnNames;
-		this.imageColumnNames.add( labelImageColumnName );
+		this.imageColumnNames.remove( labelImageColumnName );
 		extractImagePaths();
 	}
 
-	public Set< String > getImagePaths()
+	public Map< String, Set< String > > getColumnNameToImagePaths()
 	{
-		return imagePaths; // includes labelImagePaths
+		return columnNameToImagePaths;
 	}
 
-	public HashMap< String, String > getImagePathToLabelImageId()
+	public Set< String > getLabelImagePaths()
 	{
-		return imagePathToLabelImageId;
+		return labelImagePaths;
 	}
 
 	private void extractImagePaths()
 	{
-		imagePaths = new HashSet<>(  );
-		imagePathToLabelImageId = new HashMap< String, String >(  );
+		columnNameToImagePaths = new HashMap<>(  );
+		for ( String imageColumnName : imageColumnNames )
+		{
+			columnNameToImagePaths.put( imageColumnName, new HashSet<>( ));
+		}
+
+		labelImagePaths = new HashSet<>(  );
 
 		for ( final T tableRow : tableRows )
 		{
 			for ( final String imageColumnName : imageColumnNames )
 			{
 				final String relativeImagePath = tableRow.getCell( imageColumnName );
-				String absolutePath = createAbsolutePath( imageRootDirectory, relativeImagePath ).toString();
-				imagePaths.add( absolutePath );
-
 				if ( imageColumnName.equals( labelImageColumnName ) )
-					imagePathToLabelImageId.put( absolutePath, relativeImagePath ); // relativePath is what the segment ImageId contains
+					labelImagePaths.add( relativeImagePath );
+				else
+				{
+					columnNameToImagePaths.get( imageColumnName ).add( relativeImagePath );
+				}
 			}
 		}
 	}
@@ -103,16 +103,11 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 		for ( String columnName : columnNames )
 		{
 			if ( columnName.contains( imagePathColumIdentifier ) )
-				imageColumnNames.add( columnName );
+				if ( ! columnName.equals( labelImageColumnName ) )
+					imageColumnNames.add( columnName );
 		}
 
 		return imageColumnNames;
 	}
 
-	private static Path createAbsolutePath( String rootPath, String relativePath )
-	{
-		final Path path = Paths.get( rootPath, relativePath );
-		final Path normalize = path.normalize();
-		return normalize;
-	}
 }

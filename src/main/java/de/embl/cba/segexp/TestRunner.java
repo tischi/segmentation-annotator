@@ -3,7 +3,6 @@ package de.embl.cba.segexp;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.tables.color.LazyCategoryColoringModel;
-import de.embl.cba.tables.color.SegmentsARGBConverter;
 import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
@@ -11,7 +10,7 @@ import net.imagej.ImageJ;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class TestRunner
 {
@@ -24,7 +23,7 @@ public class TestRunner
 
 		SegmentsDatasetOpener opener = new SegmentsDatasetOpener();
 		opener.open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data", "table.csv", false );
-		List< SourceAndConverter< ? > > sources = opener.getSources();
+		HashMap< String, Set< SourceAndConverter< ? > > > columnNameToSources = opener.getColumnNameToSources();
 		List< TableRowImageSegment > segments = opener.getSegments();
 		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getSourceToLabelImageId();
 
@@ -34,7 +33,7 @@ public class TestRunner
 		LazyCategoryColoringModel< TableRowImageSegment > coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
-		new SegmentedImagesViewer( segments, selectionColoringModel, sources, sourceToLabelImageId );
+		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId );
 		// also return make a map from sourceName to imageSegmentId, which is what is in the table
 
 		//new SegmentedImagesViewer<>(  )
