@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.ide;
+package de.embl.cba.segexp;
 
 import de.embl.cba.tables.tablerow.TableRow;
 
@@ -87,7 +87,6 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 
 		return imageColumnNames;
 	}
-
 
 	private static Path createAbsolutePath( String rootPath, String relativePath )
 	{

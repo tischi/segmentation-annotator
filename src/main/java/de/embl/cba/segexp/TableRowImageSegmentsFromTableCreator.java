@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.ide;
+package de.embl.cba.segexp;
 
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
@@ -35,7 +35,6 @@ import de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 
-import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

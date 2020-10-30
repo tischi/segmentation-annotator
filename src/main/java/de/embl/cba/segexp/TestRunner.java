@@ -1,4 +1,4 @@
-package de.embl.cba.ide;
+package de.embl.cba.segexp;
 
 import net.imagej.ImageJ;
 
@@ -9,9 +9,12 @@ public class TestRunner
 		ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
-		SegmentsTableDatasetOpener datasetOpener = new SegmentsTableDatasetOpener();
+//		new SourceAndConverterOpener().open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data/frag-cells-label-mask.ome.tif" );
+
+		SegmentsDatasetOpener datasetOpener = new SegmentsDatasetOpener();
 
 		datasetOpener.open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data", "table.csv", false );
+
 	}
 
 }

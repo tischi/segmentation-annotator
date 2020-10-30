@@ -1,4 +1,4 @@
-package de.embl.cba.ide;
+package de.embl.cba.segexp;
 
 import bdv.util.BdvHandle;
 import bdv.viewer.SourceAndConverter;
@@ -11,9 +11,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SegmentsTableDatasetOpener
+public class SegmentsDatasetOpener
 {
-	public SegmentsTableDatasetOpener()
+	private List< SourceAndConverter< ? > > sourceAndConverters;
+	private List< TableRowImageSegment > tableRows;
+
+	public SegmentsDatasetOpener()
 	{
 	}
 
@@ -22,26 +25,17 @@ public class SegmentsTableDatasetOpener
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
 
 		TableRowImageSegmentsFromTableCreator creator = new TableRowImageSegmentsFromTableCreator( tablePath, isOneBasedTimePoint );
-		List< TableRowImageSegment > tableRows = creator.createTableRows();
+		tableRows = creator.createTableRows();
 
-		ImagePathsFromTableRowsExtractor< TableRowImageSegment > extractor = new ImagePathsFromTableRowsExtractor<>( tableRows, rootDirectory, "relative_path_" );
-
-		List< String > imagePaths = extractor.extractImagePaths();
+		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor<>( tableRows, rootDirectory, "image_path_" );
+		List< String > imagePaths = imagePathsExtractor.extractImagePaths();
 
 		SourceAndConverterOpener opener = new SourceAndConverterOpener();
-		List< SourceAndConverter< ? > > sourceAndConverters = new ArrayList<>( );
+		sourceAndConverters = new ArrayList<>( );
 		for ( String imagePath : imagePaths )
 		{
 			List< SourceAndConverter< ? > > sources = opener.open( imagePath );
 			sources.forEach( s -> sourceAndConverters.add( s ) );
 		}
-
-		BdvHandle bdvHandle = SourceAndConverterServices.getSourceAndConverterDisplayService().getActiveBdv();
-
-		sourceAndConverters.forEach( sac -> {
-			SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, sac );
-			new ViewerTransformAdjuster( bdvHandle, sac ).run();
-			new BrightnessAutoAdjuster( sac, 0 ).run();
-		} );
 	}
 }
