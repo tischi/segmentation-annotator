@@ -33,7 +33,7 @@ public class TestRunner
 		LazyCategoryColoringModel< TableRowImageSegment > coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
-		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId );
+		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId, is2D );
 		// also return make a map from sourceName to imageSegmentId, which is what is in the table
 
 		//new SegmentedImagesViewer<>(  )
