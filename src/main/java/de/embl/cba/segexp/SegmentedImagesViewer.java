@@ -29,7 +29,6 @@
 package de.embl.cba.segexp;
 
 import bdv.util.*;
-import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.BdvUtils;
@@ -45,23 +44,16 @@ import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import ij.gui.GenericDialog;
-import net.imglib2.RealPoint;
-import net.imglib2.img.array.ArrayImg;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import org.jetbrains.annotations.NotNull;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
-import sc.fiji.bdvpg.bdv.BdvCreator;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
 
 import java.util.*;
-
-import static de.embl.cba.bdv.utils.converters.SelectableVolatileARGBConverter.BACKGROUND;
 
 // TODO: reconsider what a "segment" needs to be here
 public class SegmentedImagesViewer< T extends ImageSegment >
@@ -129,19 +121,29 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 
 		labelsSources.stream().forEach( source ->
 		{
-				String labelImageId = sourceToLabelImageId.get( source );
-				SegmentsConverter segmentsConverter = new SegmentsConverter(
-						labelFrameAndImageToSegment,
-						labelImageId,
-						selectionColoringModel );
+			String labelImageId = sourceToLabelImageId.get( source );
 
-				bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
+			SegmentsRealTypeConverter segmentsConverter = new SegmentsRealTypeConverter(
+				labelFrameAndImageToSegment,
+				labelImageId,
+				selectionColoringModel );
 
-				SourceAndConverter< ? > labelMaskSource = new SourceAndConverter<>( source.getSpimSource(), segmentsConverter );
+//			SegmentsRealTypeConverter segmentsVolatileConverter = new SegmentsRealTypeConverter<>(
+//				labelFrameAndImageToSegment,
+//				labelImageId,
+//				selectionColoringModel );
 
-				// the source object has changed => replace in the map
-				sourceToLabelImageId.remove( source );
-				sourceToLabelImageId.put(labelMaskSource, labelImageId );
+			bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
+			//bdvHandle.getViewerPanel().addTimePointListener( segmentsVolatileConverter );
+
+			SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( source.asVolatile().getSpimSource(), segmentsConverter );
+			SourceAndConverter sourceAndConverter = new SourceAndConverter( source.getSpimSource(), segmentsConverter, volatileSourceAndConverter );
+
+			//SourceAndConverter sourceAndConverter = new SourceAndConverter( source.getSpimSource(), segmentsConverter );
+
+			// the source object has changed => replace in the map
+			sourceToLabelImageId.remove( source );
+			sourceToLabelImageId.put( sourceAndConverter, labelImageId );
 		} );
 	}
 

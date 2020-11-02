@@ -30,18 +30,16 @@ package de.embl.cba.segexp;
 
 import bdv.viewer.TimePointListener;
 import de.embl.cba.tables.color.ColoringModel;
-import de.embl.cba.tables.color.LabelsARGBConverter;
 import de.embl.cba.tables.imagesegment.ImageSegment;
 import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import net.imglib2.Volatile;
 import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.volatiles.VolatileARGBType;
 
 import java.util.Map;
 
-public class SegmentsConverter< T extends ImageSegment, R extends RealType< R >> implements Converter< R, ARGBType >, TimePointListener
+public class SegmentsRealTypeConverter< T extends ImageSegment > implements Converter< RealType, ARGBType >, TimePointListener
 {
 	private final Map< LabelFrameAndImage, T > labelFrameAndImageToSegment;
 	private final String imageId;
@@ -50,7 +48,7 @@ public class SegmentsConverter< T extends ImageSegment, R extends RealType< R >>
 
 	private int frame;
 
-	public SegmentsConverter(
+	public SegmentsRealTypeConverter(
 			Map< LabelFrameAndImage, T > labelFrameAndImageToSegment,
 			String imageId,
 			ColoringModel coloringModel )
@@ -63,8 +61,17 @@ public class SegmentsConverter< T extends ImageSegment, R extends RealType< R >>
 	}
 
 	@Override
-	public void convert( R label, ARGBType color )
+	public void convert( RealType label, ARGBType color )
 	{
+		if ( label instanceof Volatile )
+		{
+			if ( ! ( ( Volatile ) label ).isValid() )
+			{
+				color.set( 0 );
+				return;
+			}
+		}
+
 		if ( label.getRealDouble() == 0 )
 		{
 			color.set( 0 );
