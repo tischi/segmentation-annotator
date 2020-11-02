@@ -82,15 +82,11 @@ public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 
 		for ( final T tableRow : tableRows )
 		{
+			labelImagePaths.add( tableRow.getCell( labelImageColumnName ) );
+
 			for ( final String imageColumnName : imageColumnNames )
 			{
-				final String relativeImagePath = tableRow.getCell( imageColumnName );
-				if ( imageColumnName.equals( labelImageColumnName ) )
-					labelImagePaths.add( relativeImagePath );
-				else
-				{
-					columnNameToImagePaths.get( imageColumnName ).add( relativeImagePath );
-				}
+				columnNameToImagePaths.get( imageColumnName ).add( tableRow.getCell( imageColumnName ) );
 			}
 		}
 	}

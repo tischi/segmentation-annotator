@@ -24,7 +24,7 @@ public class SegmentsDatasetOpener
 		segments = segmentsCreator.createSegments();
 		String labelImageColumnName = segmentsCreator.getLabelImageColumnName();
 
-		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, rootDirectory, "image_path_", labelImageColumnName );
+		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, rootDirectory, labelImageColumnName, "image_path_" );
 		Map< String, Set< String > > columnNameToImagePaths = imagePathsExtractor.getColumnNameToImagePaths();
 		Set< String > labelImagePaths = imagePathsExtractor.getLabelImagePaths();
 
@@ -36,7 +36,7 @@ public class SegmentsDatasetOpener
 			final HashSet< SourceAndConverter< ? > > sources = new HashSet<>();
 			columnNameToImagePaths.get( columnName ).forEach( imagePath ->
 			{
-				String absolutePath = Utils.createAbsolutePath( rootDirectory, columnName );
+				String absolutePath = Utils.createAbsolutePath( rootDirectory, imagePath );
 				List< SourceAndConverter< ? > > sourcesFromImagePath = opener.open( absolutePath );
 				sourcesFromImagePath.forEach( sourceFromImagePath -> sources.add( sourceFromImagePath ) );
 			} );

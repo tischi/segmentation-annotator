@@ -27,13 +27,12 @@ public class TestRunner
 		List< TableRowImageSegment > segments = opener.getSegments();
 		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getSourceToLabelImageId();
 
-
 		// create coloring and selection models
 		DefaultSelectionModel< TableRowImageSegment > selectionModel = new DefaultSelectionModel<>();
 		LazyCategoryColoringModel< TableRowImageSegment > coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
-		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId, is2D );
+		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId, true );
 		// also return make a map from sourceName to imageSegmentId, which is what is in the table
 
 		//new SegmentedImagesViewer<>(  )

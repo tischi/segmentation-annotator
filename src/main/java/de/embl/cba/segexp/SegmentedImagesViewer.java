@@ -29,6 +29,7 @@
 package de.embl.cba.segexp;
 
 import bdv.util.*;
+import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.BdvUtils;
@@ -45,11 +46,15 @@ import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
+import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import org.jetbrains.annotations.NotNull;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
+import sc.fiji.bdvpg.bdv.BdvCreator;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
@@ -108,7 +113,6 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 
 		initSegments( segments );
 
-		// TODO: make the Bdv 2D if appropriate
 		bdvHandle = SourceAndConverterServices.getSourceAndConverterDisplayService().getNewBdv();
 		configureLabelMaskSources();
 		showSources();
@@ -126,14 +130,14 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 		labelsSources.stream().forEach( source ->
 		{
 				String labelImageId = sourceToLabelImageId.get( source );
-				SegmentsARGBConverter labelsARGBConverter = new SegmentsARGBConverter(
+				SegmentsConverter segmentsConverter = new SegmentsConverter(
 						labelFrameAndImageToSegment,
 						labelImageId,
 						selectionColoringModel );
 
-				bdvHandle.getViewerPanel().addTimePointListener( labelsARGBConverter );
+				bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-				SourceAndConverter< ? > labelMaskSource = new SourceAndConverter<>( source.getSpimSource(), labelsARGBConverter );
+				SourceAndConverter< ? > labelMaskSource = new SourceAndConverter<>( source.getSpimSource(), segmentsConverter );
 
 				// the source object has changed => replace in the map
 				sourceToLabelImageId.remove( source );
@@ -144,7 +148,6 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 	private void showSources()
 	{
 		showLabelMaskSources();
-
 		showOtherSources();
 	}
 
@@ -164,7 +167,8 @@ public class SegmentedImagesViewer< T extends ImageSegment >
 
 	private void showLabelMaskSources()
 	{
-		sourceToLabelImageId.keySet().forEach( source -> {
+		sourceToLabelImageId.keySet().forEach( source ->
+		{
 			SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
 			new ViewerTransformAdjuster( bdvHandle, source ).run();
 			new BrightnessAutoAdjuster( source, 0 ).run();
