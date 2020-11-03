@@ -4,7 +4,6 @@ import bdv.util.Bdv;
 import bdv.util.BdvHandle;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
-import bdv.viewer.state.SourceState;
 import de.embl.cba.bdv.utils.BdvUtils;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -12,8 +11,6 @@ import net.imglib2.Point;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Intervals;
-import sc.fiji.bdvpg.services.SourceAndConverterServices;
-import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,62 +31,55 @@ public class SourcesGetter
 		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( mousePosInBdv );
 		int timePoint = bdvHandle.getViewerPanel().state().getCurrentTimepoint();
 
-		BdvUtils.getSourceIndicesAtSelectedPoint()
-		List< SourceAndConverter< ? > > sourceAndConverters = SourceAndConverterServices.getSourceAndConverterDisplayService().getSourceAndConverterOf( bdvHandle )
-				.stream()
-				.filter( sac -> SourceAndConverterUtils.isSourcePresentAt( sac, timePoint, mousePosInBdv ) )
-				.filter( sac -> SourceAndConverterServices.getSourceAndConverterDisplayService().isVisible( sac, bdvHandle ) )
-				.collect( Collectors.toList() );
 
 		return sourceAndConverters;
 	}
 
-	public static ArrayList< Integer > getSourceIndicesAtSelectedPoint( Bdv bdv, RealPoint selectedPoint, boolean evalSourcesAtPointIn2D )
+	private static List< SourceAndConverter< ? > > getSourcesAtPosition( Bdv bdv, RealPoint position, boolean is2D )
 	{
 		final ArrayList< Integer > sourceIndicesAtSelectedPoint = new ArrayList<>();
 
-		final int numSources = bdv.getBdvHandle().getViewerPanel()
-				.getState().getSources().size();
+		List< SourceAndConverter< ? > > sources = bdv.getBdvHandle().getViewerPanel().state().getSources();
 
-		for ( int sourceIndex = 0; sourceIndex < numSources; sourceIndex++ )
-		{
-			final SourceState< ? > sourceState =
-					bdv.getBdvHandle().getViewerPanel()
-							.getState().getSources().get( sourceIndex );
+		List< SourceAndConverter< ? > > collect = sources.stream().filter( source -> {
 
-			final Source< ? > source = sourceState.getSpimSource();
+			Source< ? > spimSource = source.getSpimSource();
 
-			final long[] positionInSource = getPositionInSource( source, selectedPoint, 0, 0 );
+			final long[] positionInSource = getPositionInSource( spimSource, position, 0, 0 );
+			Interval sourceInterval = spimSource.getSource( 0, 0 );
 
-			Interval interval = source.getSource( 0, 0 );
-			final Point point = new Point( positionInSource );
+			Interval interval;
+			Point point;
 
-			if ( evalSourcesAtPointIn2D )
+			if ( is2D )
 			{
 				final long[] min = new long[ 2 ];
 				final long[] max = new long[ 2 ];
 				final long[] positionInSource2D = new long[ 2 ];
 				for ( int d = 0; d < 2; d++ )
 				{
-					min[ d ] = interval.min( d );
-					max[ d ] = interval.max( d );
+					min[ d ] = sourceInterval.min( d );
+					max[ d ] = sourceInterval.max( d );
 					positionInSource2D[ d ] = positionInSource[ d ];
 				}
 
-				final FinalInterval interval2D = new FinalInterval( min, max );
-				final Point point2D = new Point( positionInSource2D );
-
-				if ( Intervals.contains( interval2D, point2D ) )
-					sourceIndicesAtSelectedPoint.add( sourceIndex );
+				interval = new FinalInterval( min, max );
+				point = new Point( positionInSource2D );
 			}
 			else
 			{
-				if ( Intervals.contains( interval, point ) )
-					sourceIndicesAtSelectedPoint.add( sourceIndex );
+				interval = sourceInterval;
+				point = new Point( positionInSource );
 			}
-		}
 
-		return sourceIndicesAtSelectedPoint;
+			if ( Intervals.contains( interval, point ) )
+				return true;
+			else
+				return false;
+
+		} ).collect( Collectors.toList() );
+
+		return collect;
 	}
 
 	private static long[] getPositionInSource(
