@@ -6,6 +6,7 @@ import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
+import de.embl.cba.tables.view.TableRowsTableView;
 import net.imagej.ImageJ;
 
 import java.util.HashMap;
@@ -19,30 +20,23 @@ public class TestRunner
 		ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
-//		new SourceAndConverterOpener().open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data/frag-cells-label-mask.ome.tif" );
-
+		// open data
 		SegmentsDatasetOpener opener = new SegmentsDatasetOpener();
 		opener.open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data", "table.csv", false );
 		HashMap< String, Set< SourceAndConverter< ? > > > columnNameToSources = opener.getColumnNameToSources();
 		List< TableRowImageSegment > segments = opener.getSegments();
-		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getSourceToLabelImageId();
+		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getLabelSourceToLabelImageId();
 
 		// create coloring and selection models
 		DefaultSelectionModel< TableRowImageSegment > selectionModel = new DefaultSelectionModel<>();
 		LazyCategoryColoringModel< TableRowImageSegment > coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
-		new SegmentedImagesViewer( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId, true );
-		// also return make a map from sourceName to imageSegmentId, which is what is in the table
-
-		//new SegmentedImagesViewer<>(  )
-
-//		HashSet< String > labelImageIds = new HashSet<>();
-//		for ( TableRowImageSegment segment : segments )
-//		{
-//			labelImageIds.add( segment.imageId() =  );
-//		}
-
+		// show data
+		SegmentedImagesView imagesView = new SegmentedImagesView( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId );
+		imagesView.showImages( true, 1 );
+		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( segments, selectionModel, selectionColoringModel );
+		tableView.showTableAndMenu( imagesView.getWindow() );
 	}
 
 }

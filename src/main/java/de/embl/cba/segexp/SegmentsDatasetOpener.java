@@ -10,7 +10,7 @@ public class SegmentsDatasetOpener
 {
 	private HashMap< String, Set< SourceAndConverter< ? > > > columnNameToSources;
 	private List< TableRowImageSegment > segments;
-	private HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId;
+	private HashMap< SourceAndConverter< ? >, String > labelSourceToLabelImageId;
 
 	public SegmentsDatasetOpener()
 	{
@@ -19,7 +19,6 @@ public class SegmentsDatasetOpener
 	public void open( String rootDirectory, String relativeTablePath, boolean isOneBasedTimePoint )
 	{
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
-
 		SegmentsCreator segmentsCreator = new SegmentsCreator( tablePath, isOneBasedTimePoint );
 		segments = segmentsCreator.createSegments();
 		String labelImageColumnName = segmentsCreator.getLabelImageColumnName();
@@ -30,6 +29,24 @@ public class SegmentsDatasetOpener
 
 		SourceAndConverterOpener opener = new SourceAndConverterOpener();
 
+		openLabelSources( rootDirectory, labelImagePaths, opener );
+
+		openOtherSources( rootDirectory, columnNameToImagePaths, opener );
+	}
+
+	private void openLabelSources( String rootDirectory, Set< String > labelImagePaths, SourceAndConverterOpener opener )
+	{
+		labelSourceToLabelImageId = new HashMap<>();
+		labelImagePaths.forEach( labelImagePath -> {
+			String absolutePath = Utils.createAbsolutePath( rootDirectory, labelImagePath );
+			List< SourceAndConverter< ? > > sourcesFromImagePath = opener.open( absolutePath );
+			SourceAndConverter< ? > labelsSource = sourcesFromImagePath.get( 0 );
+			labelSourceToLabelImageId.put( labelsSource, labelImagePath );
+		} );
+	}
+
+	private void openOtherSources( String rootDirectory, Map< String, Set< String > > columnNameToImagePaths, SourceAndConverterOpener opener )
+	{
 		columnNameToSources = new HashMap<>( );
 		columnNameToImagePaths.keySet().forEach( columnName ->
 		{
@@ -42,15 +59,6 @@ public class SegmentsDatasetOpener
 			} );
 			columnNameToSources.put( columnName, sources );
 		} );
-
-		sourceToLabelImageId = new HashMap<>();
-		labelImagePaths.forEach( labelImagePath -> {
-			String absolutePath = Utils.createAbsolutePath( rootDirectory, labelImagePath );
-			List< SourceAndConverter< ? > > sourcesFromImagePath = opener.open( absolutePath );
-			SourceAndConverter< ? > labelsSource = sourcesFromImagePath.get( 0 );
-			sourceToLabelImageId.put( labelsSource, labelImagePath );
-		} );
-
 	}
 
 	public HashMap< String, Set< SourceAndConverter< ? > > > getColumnNameToSources()
@@ -63,8 +71,8 @@ public class SegmentsDatasetOpener
 		return segments;
 	}
 
-	public HashMap< SourceAndConverter< ? >, String > getSourceToLabelImageId()
+	public HashMap< SourceAndConverter< ? >, String > getLabelSourceToLabelImageId()
 	{
-		return sourceToLabelImageId;
+		return labelSourceToLabelImageId;
 	}
 }

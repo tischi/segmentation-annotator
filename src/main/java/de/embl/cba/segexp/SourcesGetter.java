@@ -18,7 +18,7 @@ public class SourcesGetter
 		this.bdvHandle = bdvHandle;
 	}
 
-	public List< SourceAndConverter< ? > > getVisibleSourcesAtCurrentMousePosition()
+	public List< SourceAndConverter< ? > > getVisibleSourcesAtMousePosition()
 	{
 		final RealPoint mousePosInBdv = new RealPoint( 3 );
 		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( mousePosInBdv );
