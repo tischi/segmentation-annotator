@@ -4,12 +4,20 @@ import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import de.embl.cba.lazyalgorithm.RandomAccessibleIntervalFilter;
+import de.embl.cba.lazyalgorithm.converter.NeighborhoodNonZeroBoundariesConverter2;
+import de.embl.cba.lazyalgorithm.view.NeighborhoodViews;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
+import net.imglib2.algorithm.neighborhood.HyperSphereShape;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A {@link Source} that wraps another {@link Source} and allows to decorate it
@@ -23,27 +31,28 @@ import net.imglib2.view.Views;
  * @param <T>
  *            the type of the original source.
  */
-public class FilteredSource< T extends NumericType< T > > implements Source< T >
+public class LabelMaskSource< T extends NumericType< T > & RealType< T > > implements Source< T >
 {
 	protected final Source< T > source;
 	private final DefaultInterpolators< T > interpolators;
-	private RandomAccessibleIntervalFilter< T > filter;
+	private boolean showAsBoundaries;
+	private int boundaryWidth;
 
-	public FilteredSource( final Source< T > source )
+	public LabelMaskSource( final Source< T > source )
 	{
 		this( source, null);
 	}
 
-	public FilteredSource( final Source< T > source, RandomAccessibleIntervalFilter< T > filter )
+	public LabelMaskSource( final Source< T > source, RandomAccessibleIntervalFilter< T > filter )
 	{
 		this.source = source;
-		this.filter = filter;
 		this.interpolators = new DefaultInterpolators();
 	}
 
-	public void setFilter( RandomAccessibleIntervalFilter< T > filter )
+	public void showAsBoundary( boolean showAsBoundaries, int boundaryWidth )
 	{
-		this.filter = filter;
+		this.showAsBoundaries = showAsBoundaries;
+		this.boundaryWidth = boundaryWidth;
 	}
 
 	@Override
@@ -68,24 +77,35 @@ public class FilteredSource< T extends NumericType< T > > implements Source< T >
 	@Override
 	public RandomAccessibleInterval< T > getSource( final int t, final int level )
 	{
-		if ( filter == null  )
-			return source.getSource( t, level );
+		RandomAccessibleInterval< T > source = this.source.getSource( t, level );
+
+		if ( showAsBoundaries )
+		{
+			NeighborhoodNonZeroBoundariesConverter2< T > boundariesConverter = new NeighborhoodNonZeroBoundariesConverter2< T >( source );
+			RandomAccessibleInterval boundaries = NeighborhoodViews.neighborhoodConvertedView(
+					source,
+					boundariesConverter,
+					new HyperSphereShape( boundaryWidth ) );
+			return boundaries;
+		}
 		else
-			return filter.filter( source.getSource( t, level ) );
+		{
+			return source;
+		}
 	}
 
 	@Override
 	public RealRandomAccessible< T > getInterpolatedSource( final int t, final int level, final Interpolation method )
 	{
-		if ( filter == null  )
-		{
-			return source.getInterpolatedSource( t, level, method );
-		}
-		else
+		if ( showAsBoundaries  )
 		{
 			RandomAccessibleInterval< T > rai = getSource( t, level );
 			RealRandomAccessible< T > interpolate = Views.interpolate( Views.extendZero( rai ), interpolators.get( method ) );
 			return interpolate;
+		}
+		else
+		{
+			return source.getInterpolatedSource( t, level, method );
 		}
 	}
 

@@ -28,21 +28,14 @@
  */
 package de.embl.cba.segexp;
 
-import bdv.SpimSource;
 import bdv.tools.brightness.ConverterSetup;
-import bdv.tools.transformation.TransformedSource;
 import bdv.util.*;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
-import de.embl.cba.bdv.utils.sources.ImagePlusFileSource;
 import de.embl.cba.bdv.utils.sources.Metadata;
-import de.embl.cba.bdv.utils.sources.ModifiableRandomAccessibleIntervalSource4D;
-import de.embl.cba.lazyalgorithm.RandomAccessibleIntervalNeighborhoodFilter;
-import de.embl.cba.lazyalgorithm.converter.NeighborhoodNonZeroBoundariesConverter;
-import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.color.*;
 import de.embl.cba.tables.imagesegment.ImageSegment;
 import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
@@ -50,9 +43,7 @@ import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import ij.gui.GenericDialog;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.algorithm.neighborhood.HyperSphereShape;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -60,7 +51,6 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -173,13 +163,13 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-			FilteredSource< R > filteredVolatileSource = new FilteredSource( source.asVolatile().getSpimSource(), null );
+			LabelMaskSource< R > filteredVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource(), null );
 
 			SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( filteredVolatileSource , segmentsConverter );
 
-			FilteredSource< R > filteredSource = new FilteredSource( source.getSpimSource(), null );
+			LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource(), null );
 			
-			SourceAndConverter sourceAndConverter = new SourceAndConverter( filteredSource, segmentsConverter, volatileSourceAndConverter );
+			SourceAndConverter sourceAndConverter = new SourceAndConverter( labelMaskSource, segmentsConverter, volatileSourceAndConverter );
 
 			// the source object has changed => replace in the map
 			labelSourceToLabelImageId.remove( source );
@@ -319,14 +309,14 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		installSelectionBehaviour();
 		installUndoSelectionBehaviour();
-		installSelectionColoringModeBehaviour(); // TODO: maybe move to popup menu
+		installSelectionColoringModeBehaviour();
 		installRandomColorShufflingBehaviour();
 		installShowLabelMaskAsBinaryMaskBehaviour();
 		installShowLabelMaskAsBoundaryBehaviour();
-		// install3DViewBehaviour(); // TODO: maybe move to popup menu
 
 		addUndoSelectionPopupMenu();
 		addSelectionColoringModePopupMenu();
+		addShowLabelMaskAsBoundaryPopupMenu();
 		addAnimationSettingsPopupMenu();
 	}
 
@@ -382,6 +372,19 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		}
 	}
 
+	private void addShowLabelMaskAsBoundaryPopupMenu()
+	{
+		final ArrayList< String > menuNames = new ArrayList<>();
+		menuNames.add( getLabelImageMenuName() );
+
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				menuNames,
+				"Show as Boundary",
+				( x, y ) -> { labelMasksAsBoundaryDialog(); }
+			);
+	}
+
 	@NotNull
 	private String getLabelImageMenuName()
 	{
@@ -416,7 +419,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private void installShowLabelMaskAsBoundaryBehaviour()
 	{
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-						new Thread( () -> toggleLabelMasksAsBoundaries() ).start(),
+						new Thread( () -> labelMasksAsBoundaryDialog() ).start(),
 				segmentsName + "-asBoundaries",
 				labelMaskAsBoundaryTrigger );
 	}
@@ -450,16 +453,19 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	}
 
 	// TODO: add to context menu?
-	private synchronized void toggleLabelMasksAsBoundaries()
+	private synchronized void labelMasksAsBoundaryDialog()
 	{
-		final RandomAccessibleIntervalNeighborhoodFilter filter = createBoundaryFilter();
+		LabelMaskAsBoundaryDialog dialog = new LabelMaskAsBoundaryDialog();
+		dialog.showDialog();
+		final int boundaryThickness = dialog.getBoundaryThickness();
+		final boolean showAsBoundary = dialog.isShowAsBoundary();
 
 		getLabelSources().forEach( source ->
 		{
-			if ( ! ( source.getSpimSource() instanceof FilteredSource ) ) return;
+			if ( ! ( source.getSpimSource() instanceof LabelMaskSource ) ) return;
 
-			(( FilteredSource ) source.getSpimSource() ).setFilter( filter );
-			(( FilteredSource ) source.asVolatile().getSpimSource() ).setFilter( filter );
+			(( LabelMaskSource ) source.getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
+			(( LabelMaskSource ) source.asVolatile().getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
 		});
 
 		labelMasksShownAsBoundaries = ! labelMasksShownAsBoundaries;
@@ -467,19 +473,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		BdvUtils.repaint( bdvHandle );
 	}
 
-	@Nullable
-	private RandomAccessibleIntervalNeighborhoodFilter createBoundaryFilter()
-	{
-		if ( ! labelMasksShownAsBoundaries )
-		{
-			BoundaryFilterCreator filterCreator = new BoundaryFilterCreator( getLabelSources().iterator().next().getSpimSource().getType() );
-			return filterCreator.createFilter();
-		}
-		else
-		{
-			return null;
-		}
-	}
 
 	public void setLabelSourceSingleColor( ARGBType labelSourceSingleColor )
 	{
@@ -575,18 +568,20 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private T getSegmentAtMouseCoordinates()
 	{
 		final RealPoint globalMouseCoordinates = BdvUtils.getGlobalMouseCoordinates( bdvHandle );
+		List< SourceAndConverter< ? > > sources = bdvHandle.getViewerPanel().state().getSources();
 
-		List< SourceAndConverter< ? > > sourcesAtMousePosition = new SourcesGetter( bdvHandle ).getVisibleSourcesAtMousePosition();
+		SpatialSourceAndConverterSubsetter subsetter = new SpatialSourceAndConverterSubsetter( sources,  true );
+		List< SourceAndConverter< ? > > sourcesAtPosition = subsetter.getSourcesAtPosition( globalMouseCoordinates, bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
 
 		Set< SourceAndConverter< R > > labelSources = getLabelSources();
 
-		for ( SourceAndConverter< ? > source : sourcesAtMousePosition )
+		for ( SourceAndConverter< ? > source : sourcesAtPosition )
 		{
 			if ( labelSources.contains( source ) )
 			{
 				Source< R > spimSource = ( Source< R > ) source.getSpimSource();
-				if ( spimSource instanceof FilteredSource )
-					spimSource = ( ( FilteredSource ) spimSource ).getWrappedSource();
+				if ( spimSource instanceof LabelMaskSource )
+					spimSource = ( ( LabelMaskSource ) spimSource ).getWrappedSource();
 				
 				final Double labelIndex = BdvUtils.getPixelValue( spimSource, globalMouseCoordinates, getCurrentTimePoint() );
 
