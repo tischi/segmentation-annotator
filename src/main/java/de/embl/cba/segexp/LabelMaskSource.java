@@ -1,5 +1,6 @@
 package de.embl.cba.segexp;
 
+import bdv.util.BdvFunctions;
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
@@ -40,11 +41,6 @@ public class LabelMaskSource< T extends NumericType< T > & RealType< T > > imple
 
 	public LabelMaskSource( final Source< T > source )
 	{
-		this( source, null);
-	}
-
-	public LabelMaskSource( final Source< T > source, RandomAccessibleIntervalFilter< T > filter )
-	{
 		this.source = source;
 		this.interpolators = new DefaultInterpolators();
 	}
@@ -58,6 +54,7 @@ public class LabelMaskSource< T extends NumericType< T > & RealType< T > > imple
 	@Override
 	public boolean doBoundingBoxCulling()
 	{
+//		System.out.println( "Source " + source.getName() + " culling: " + source.doBoundingBoxCulling() );
 		return source.doBoundingBoxCulling();
 	}
 
@@ -66,6 +63,7 @@ public class LabelMaskSource< T extends NumericType< T > & RealType< T > > imple
 	public synchronized void getSourceTransform( final int t, final int level, final AffineTransform3D transform )
 	{
 		source.getSourceTransform( t, level, transform );
+//		System.out.println( "Source " + source.getName() + " transform: " + transform.toString() );
 	}
 
 	@Override
@@ -97,6 +95,7 @@ public class LabelMaskSource< T extends NumericType< T > & RealType< T > > imple
 	@Override
 	public RealRandomAccessible< T > getInterpolatedSource( final int t, final int level, final Interpolation method )
 	{
+//		System.out.println("Access source: " + source.getName() + " of type " + getType().toString() );
 		if ( showAsBoundaries  )
 		{
 			RandomAccessibleInterval< T > rai = getSource( t, level );

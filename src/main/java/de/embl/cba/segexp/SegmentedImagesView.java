@@ -34,6 +34,7 @@ import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.BdvUtils;
+import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
 import de.embl.cba.bdv.utils.sources.Metadata;
 import de.embl.cba.tables.color.*;
@@ -55,8 +56,9 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
+import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
-import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
+
 
 import java.awt.*;
 import java.util.*;
@@ -81,16 +83,15 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private Behaviours behaviours;
 	private BdvHandle bdvHandle;
-	private String segmentsName;
+	private String name;
 	private T recentFocus;
 	private HashMap< LabelFrameAndImage, T > labelFrameAndImageToSegment;
 	private List< T > segments;
-	private int segmentFocusAnimationDurationMillis;
-	private ARGBType labelSourceSingleColor;
-	private boolean isLabelMaskShownAsBinaryMask;
-	private boolean labelMasksShownAsBoundaries;
-	private int labelMaskBoundaryThickness;
-	private Set< String > popupActionNames;
+	private int segmentFocusAnimationDurationMillis = 750;
+	private ARGBType labelSourceSingleColor = new ARGBType( ARGBType.rgba( 255, 255, 255, 255 ) );
+	private boolean labelMasksShownAsBoundaries = false;
+	private Set< String > popupActionNames = new HashSet<>(  );
+	private boolean is2D;
 
 
 	public SegmentedImagesView(
@@ -104,20 +105,16 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		this.selectionModel = selectionColoringModel.getSelectionModel();
 		this.groupNameToSources = groupNameToSources;
 		this.labelSourceToLabelImageId = labelSourceToLabelImageId;
-
-		this.labelSourceSingleColor = new ARGBType( ARGBType.rgba( 255, 255, 255, 255 ) );
-		;
-		this.isLabelMaskShownAsBinaryMask = false;
-
-		this.segmentFocusAnimationDurationMillis = 750;
-		this.popupActionNames = new HashSet<>();
+		this.name = segments.toString();
 
 		initSegments( segments );
 	}
 
 	public void showImages( boolean is2D, int numTimePoints )
 	{
-		createNewBdv( is2D, numTimePoints );
+		this.is2D = is2D;
+
+		createNewBdv( numTimePoints );
 
 		initLabelMaskSources();
 		showSources();
@@ -128,7 +125,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		installBdvBehavioursAndPopupMenu();
 	}
 
-	private void createNewBdv( boolean is2D, int numTimePoints )
+	private void createNewBdv( int numTimePoints )
 	{
 		// bdvHandle = SourceAndConverterServices.getSourceAndConverterDisplayService().getNewBdv();
 
@@ -150,6 +147,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void initLabelMaskSources()
 	{
+		Logger.log("Initializing label mask sources...");
 		Set< SourceAndConverter< R > > labelsSources = new HashSet<>( labelSourceToLabelImageId.keySet() );
 
 		labelsSources.stream().forEach( source ->
@@ -163,16 +161,14 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-			LabelMaskSource< R > filteredVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource(), null );
-
-			SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( filteredVolatileSource , segmentsConverter );
-
-			LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource(), null );
-			
+			LabelMaskSource< R > labelMaskVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource() );
+			SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( labelMaskVolatileSource , segmentsConverter );
+			LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource() );
 			SourceAndConverter sourceAndConverter = new SourceAndConverter( labelMaskSource, segmentsConverter, volatileSourceAndConverter );
 
 			// the source object has changed => replace in the map
 			labelSourceToLabelImageId.remove( source );
+			Logger.log( "Initialised " + sourceAndConverter.getSpimSource().getName() + " with label image identifier " + labelImageId );
 			labelSourceToLabelImageId.put( sourceAndConverter, labelImageId );
 		} );
 	}
@@ -185,6 +181,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void showOtherSources()
 	{
+		Logger.log("Showing other sources...");
+
 		groupNameToSources.keySet().forEach( groupName ->
 		{
 			groupNameToSources.get( groupName ).forEach( source ->
@@ -192,8 +190,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 				// TODO: group in terms of B&C
 				//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
 				addSourceToBdv( source );
-				//new ViewerTransformAdjuster( bdvHandle, source ).run();
-				new BrightnessAutoAdjuster( source, 0 ).run();
+				//new BrightnessAutoAdjuster( source, 0 ).run();
 			} );
 		} );
 	}
@@ -210,19 +207,22 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void showLabelMaskSources()
 	{
+		Logger.log("Showing label mask sources...");
+
 		labelSourceToLabelImageId.keySet().forEach( source ->
 		{
+			Logger.log("Showing source: " + source.getSpimSource().getName() );
 			addSourceToBdv( source );
-//			bdvHandle.getViewerPanel().state().addSource( source );
-//			bdvHandle.getViewerPanel().state().setSourceActive( source, true );
-//			SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
-//			new ViewerTransformAdjuster( bdvHandle, source ).run();
-//			new BrightnessAutoAdjuster( source, 0 ).run();
 		} );
 
 		labelSourceToLabelImageId.keySet().stream().limit( 1 ).forEach( source ->
 		{
-			new ViewerTransformAdjuster( bdvHandle, source ).run();
+			AffineTransform3D transform = new ViewerTransformAdjuster( bdvHandle, source ).getTransform();
+			if ( is2D )
+			{
+				transform.set( 0.0, 2, 3); // center around z
+			}
+			bdvHandle.getViewerPanel().state().setViewerTransform( transform );
 		} );
 	}
 
@@ -271,11 +271,12 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		final double[] position = new double[ 3 ];
 		imageSegment.localize( position );
 
-		BdvUtils.moveToPosition(
+		new ViewerTransformChanger(
 				bdvHandle,
-				position,
-				imageSegment.timePoint(),
-				segmentFocusAnimationDurationMillis );
+				sc.fiji.bdvpg.bdv.BdvUtils.getViewerTransformWithNewCenter( bdvHandle, position ),
+				false,
+				segmentFocusAnimationDurationMillis ).run();
+
 	}
 
 	public void setSegmentFocusAnimationDurationMillis( int duration )
@@ -302,10 +303,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void installBdvBehavioursAndPopupMenu()
 	{
-		segmentsName = segments.toString();
-
 		behaviours = new Behaviours( new InputTriggerConfig() );
-		behaviours.install( bdvHandle.getBdvHandle().getTriggerbindings(), segmentsName + "-bdv-select-handler" );
+		behaviours.install( bdvHandle.getBdvHandle().getTriggerbindings(), name + "-bdv-select-handler" );
 
 		installSelectionBehaviour();
 		installUndoSelectionBehaviour();
@@ -397,14 +396,14 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		genericDialog.addNumericField( "Segment Focus Animation Duration [ms]", segmentFocusAnimationDurationMillis, 0 );
 		genericDialog.showDialog();
 		if ( genericDialog.wasCanceled() ) return;
-		segmentFocusAnimationDurationMillis = ( int ) genericDialog.getNextNumber();
+		setSegmentFocusAnimationDurationMillis( ( int ) genericDialog.getNextNumber() );
 	}
 
 	private void installRandomColorShufflingBehaviour()
 	{
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> shuffleRandomColors() ).start(),
-					segmentsName + "-change-color-random-seed",
+					name + "-change-color-random-seed",
 						incrementCategoricalLutRandomSeedTrigger );
 	}
 
@@ -412,7 +411,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> toggleLabelMaskAsBinaryMask() ).start(),
-				segmentsName + "-asMask",
+				name + "-asMask",
 				labelMaskAsBinaryMaskTrigger );
 	}
 
@@ -420,7 +419,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> labelMasksAsBoundaryDialog() ).start(),
-				segmentsName + "-asBoundaries",
+				name + "-asBoundaries",
 				labelMaskAsBoundaryTrigger );
 	}
 
@@ -487,7 +486,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 				new Thread( () -> selectNone() ).start(),
-				segmentsName + "-select-none", selectNoneTrigger );
+				name + "-select-none", selectNoneTrigger );
 	}
 
 	public synchronized void selectNone()
@@ -504,7 +503,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		behaviours.behaviour(
 				( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> toggleSelectionAtMousePosition() ).start(),
-				segmentsName + "-toggle-select", selectTrigger ) ;
+				name + "-toggle-select", selectTrigger ) ;
 	}
 
 	private synchronized void toggleSelectionAtMousePosition()
@@ -609,7 +608,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 					selectionColoringModel.iterateSelectionMode();
 					BdvUtils.repaint( bdvHandle );
 				} ).start(),
-				segmentsName + "-iterate-select", iterateSelectionModeTrigger );
+				name + "-iterate-select", iterateSelectionModeTrigger );
 	}
 
 	private int getCurrentTimePoint()

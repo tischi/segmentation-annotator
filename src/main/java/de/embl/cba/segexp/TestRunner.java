@@ -20,9 +20,13 @@ public class TestRunner
 		ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
+		String rootDirectory = "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data";
+		rootDirectory = "/Users/tischer/Desktop/STX_treated_cells_1_1exp";
+
 		// open data
-		SegmentsDatasetOpener opener = new SegmentsDatasetOpener();
-		opener.open( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data", "table.csv", false );
+		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv", false, true );
+		opener.run();
+
 		HashMap< String, Set< SourceAndConverter< ? > > > columnNameToSources = opener.getColumnNameToSources();
 		List< TableRowImageSegment > segments = opener.getSegments();
 		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getLabelSourceToLabelImageId();
