@@ -76,8 +76,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private final HashMap< SourceAndConverter< R >, SourceMetadata > rawSourceToMetadata;
 	private HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata;
 
-	private final List< T > tableRowImageSegments;
-
 	private static String selectTrigger = "ctrl button1";
 	private static final String selectNoneTrigger = "ctrl shift N";
 	private static final String incrementCategoricalLutRandomSeedTrigger = "ctrl L";
@@ -91,24 +89,20 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private String name;
 	private T recentFocus;
 	private HashMap< LabelFrameAndImage, T > labelFrameAndImageToSegment;
-	private List< T > segments;
 	private int segmentFocusAnimationDurationMillis = 750;
-	private ARGBType labelSourceSingleColor = new ARGBType( ARGBType.rgba( 255, 255, 255, 255 ) );
 	private boolean labelMasksShownAsBoundaries = false;
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
 
 	public SegmentedImagesView( final List< T > tableRowImageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
-		this.tableRowImageSegments = tableRowImageSegments;
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();
 		this.rawSourceToMetadata = sourceToMetadata;
 
-		this.name = segments.toString();
-		initSegments( segments );
+		this.name = tableRowImageSegments.toString();
+		initSegments( tableRowImageSegments );
 	}
-
 
 	public void showImages( boolean is2D, int numTimePoints )
 	{
@@ -119,7 +113,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		new HashSet<>( rawSourceToMetadata.keySet() );
 
 		initSources();
-		showSources();
+		showSources(); // TODO focus on some source
 
 		registerAsSelectionListener( this.selectionColoringModel.getSelectionModel() );
 		registerAsColoringListener( this.selectionColoringModel );
@@ -176,8 +170,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			sourceToMetadata.put( source, metadata );
 		} );
-
-
 	}
 
 	@NotNull
@@ -198,21 +190,19 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void showSources()
 	{
-		showLabelMaskSources();
-		showOtherSources();
-	}
+		Set< SourceAndConverter< R > > sources = sourceToMetadata.keySet();
 
-	private void showOtherSources()
-	{
-		groupNameToSources.keySet().forEach( groupName ->
+		// focus on one of the sources
+		AffineTransform3D transform = new ViewerTransformAdjuster( bdvHandle, sources.iterator().next() ).getTransform();
+		if ( is2D ) transform.set( 0.0, 2, 3); // zero z offset
+		bdvHandle.getViewerPanel().state().setViewerTransform( transform );
+
+		// display all
+		sources.forEach( source ->
 		{
-			groupNameToSources.get( groupName ).forEach( source ->
-			{
-				//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
-				// TODO: group in terms of B&C
-				addSourceToBdv( source );
-			} );
-
+			//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
+			// TODO: group in terms of B&C
+			addSourceToBdv( source );
 			//new BrightnessAutoAdjuster( source, 0 ).run(); // TODO: maybe for whole group?
 		} );
 	}
@@ -226,30 +216,9 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		bdvHandle.getConverterSetups().put( source, converterSetup );
 	}
 
-	private void showLabelMaskSources()
-	{
-		// focus on one source
-		labelSourceToLabelImageId.keySet().stream().limit( 1 ).forEach( source ->
-		{
-			AffineTransform3D transform = new ViewerTransformAdjuster( bdvHandle, source ).getTransform();
-			if ( is2D ) transform.set( 0.0, 2, 3); // zero z offset
-			bdvHandle.getViewerPanel().state().setViewerTransform( transform );
-		} );
-
-		// add all sources
-		labelSourceToLabelImageId.keySet().forEach( source ->
-		{
-			addSourceToBdv( source );
-		} );
-	}
-
 	private void initSegments( List< T > segments )
 	{
-		if ( segments != null )
-		{
-			this.segments = segments;
-			this.labelFrameAndImageToSegment = SegmentUtils.createSegmentMap( this.segments );
-		}
+		this.labelFrameAndImageToSegment = SegmentUtils.createSegmentMap( segments );
 	}
 
 	private void registerAsColoringListener( ColoringModel< T > coloringModel )
@@ -476,7 +445,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		final int boundaryThickness = dialog.getBoundaryThickness();
 		final boolean showAsBoundary = dialog.isShowAsBoundary();
 
-		getLabelSources().forEach( source ->
+		Set< SourceAndConverter< R > > labelSources = getLabelSources();
+		labelSources.forEach( source ->
 		{
 			if ( ! ( source.getSpimSource() instanceof LabelMaskSource ) ) return;
 
@@ -578,20 +548,26 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private Set< SourceAndConverter< R > > getLabelSources()
 	{
-		return labelSourceToLabelImageId.keySet();
+		Set< SourceAndConverter< R > > primaryLabelSources = sourceToMetadata.keySet().stream()
+				.filter( source -> sourceToMetadata.get( source ).isPrimaryLabelSource )
+				.collect( Collectors.toSet() );
+
+		return primaryLabelSources;
 	}
 
 	private T getSegmentAtMouseCoordinates()
 	{
 		final RealPoint globalMouseCoordinates = BdvUtils.getGlobalMouseCoordinates( bdvHandle );
 		List< SourceAndConverter< ? > > sources = bdvHandle.getViewerPanel().state().getSources();
+		final int currentTimepoint = bdvHandle.getViewerPanel().state().getCurrentTimepoint();
 
-		SpatialSourceAndConverterSubsetter subsetter = new SpatialSourceAndConverterSubsetter( sources,  true );
-		List< SourceAndConverter< ? > > sourcesAtPosition = subsetter.getSourcesAtPosition( globalMouseCoordinates, bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
+		Set< SourceAndConverter< ? > > sourcesAtMousePosition = sources.stream()
+				.filter( source -> SourceAndConverterUtils.isPositionWithinSourceInterval( source, globalMouseCoordinates, currentTimepoint, is2D ) )
+				.collect( Collectors.toSet() );
 
 		Set< SourceAndConverter< R > > labelSources = getLabelSources();
 
-		for ( SourceAndConverter< ? > source : sourcesAtPosition )
+		for ( SourceAndConverter< ? > source : sourcesAtMousePosition )
 		{
 			if ( labelSources.contains( source ) )
 			{
@@ -599,13 +575,13 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 				if ( spimSource instanceof LabelMaskSource )
 					spimSource = ( ( LabelMaskSource ) spimSource ).getWrappedSource();
 				
-				final Double labelIndex = BdvUtils.getPixelValue( spimSource, globalMouseCoordinates, getCurrentTimePoint() );
+				final Double labelIndex = BdvUtils.getPixelValue( spimSource, globalMouseCoordinates, currentTimepoint );
 
 				if ( labelIndex == BACKGROUND ) return null;
 
-				final String labelImageId = labelSourceToLabelImageId.get( source );
+				final String labelImageId = sourceToMetadata.get( source ).imageId;
 
-				final LabelFrameAndImage labelFrameAndImage = new LabelFrameAndImage( labelIndex, getCurrentTimePoint(), labelImageId );
+				final LabelFrameAndImage labelFrameAndImage = new LabelFrameAndImage( labelIndex, currentTimepoint, labelImageId );
 
 				final T segment = labelFrameAndImageToSegment.get( labelFrameAndImage );
 
@@ -626,11 +602,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 					BdvUtils.repaint( bdvHandle );
 				} ).start(),
 				name + "-iterate-select", iterateSelectionModeTrigger );
-	}
-
-	private int getCurrentTimePoint()
-	{
-		return bdvHandle.getViewerPanel().state().getCurrentTimepoint();
 	}
 
 	public Component getWindow()
