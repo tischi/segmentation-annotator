@@ -21,15 +21,13 @@ public class TestRunner
 		ij.ui().showUI();
 
 		String rootDirectory = "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data";
-		rootDirectory = "/Users/tischer/Desktop/STX_treated_cells_1_1exp";
+		// rootDirectory = "/Users/tischer/Desktop/STX_treated_cells_1_1exp";
 
-		// open data
-		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv", false, true );
+		// open data table (= segments) and images
+		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv", false );
 		opener.run();
-
-		HashMap< String, Set< SourceAndConverter< ? > > > columnNameToSources = opener.getColumnNameToSources();
-		List< TableRowImageSegment > segments = opener.getSegments();
-		HashMap< SourceAndConverter< ? >, String > sourceToLabelImageId = opener.getLabelSourceToLabelImageId();
+		List< TableRowImageSegment > tableRowImageSegments = opener.getSegments();
+		HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata = opener.getSourceToMetadata();
 
 		// create coloring and selection models
 		DefaultSelectionModel< TableRowImageSegment > selectionModel = new DefaultSelectionModel<>();
@@ -37,9 +35,10 @@ public class TestRunner
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
 		// show data
-		SegmentedImagesView imagesView = new SegmentedImagesView( segments, selectionColoringModel, columnNameToSources, sourceToLabelImageId );
+		SegmentedImagesView imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sourceToMetadata );
 		imagesView.showImages( true, 1 );
-		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( segments, selectionModel, selectionColoringModel );
+		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
+		tableView.setSelectionMode( TableRowsTableView.SelectionMode.FocusOnly );
 		tableView.showTableAndMenu( imagesView.getWindow() );
 	}
 

@@ -31,77 +31,58 @@ package de.embl.cba.segexp;
 import de.embl.cba.tables.tablerow.TableRow;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ImagePathsFromTableRowsExtractor < T extends TableRow >
 {
 	private final List< T > tableRows;
-	private final String imageRootDirectory;
-	private final String labelImageColumnName;
 	private final Set< String > imageColumnNames;
-	private Map< String, Set< String > > columnNameToImagePaths;
-	private Set< String > labelImagePaths;
 
-	public ImagePathsFromTableRowsExtractor( final List< T > tableRows, final String imagesRootFolder, String labelImageColumnName, final String imageColumnsIdentifier )
+	public ImagePathsFromTableRowsExtractor( final List< T > tableRows, String imageColumnsIdentifier )
 	{
 		this.tableRows = tableRows;
-		this.imageRootDirectory = imagesRootFolder;
-		this.labelImageColumnName = labelImageColumnName;
 		this.imageColumnNames = fetchImageColumnNames( tableRows, imageColumnsIdentifier );
-		extractImagePaths();
 	}
 
-	public ImagePathsFromTableRowsExtractor( List< T > tableRows, String imageRootDirectory, String labelImageColumnName, Set< String > imageColumnNames )
+	public ImagePathsFromTableRowsExtractor( List< T > tableRows, String labelImageColumnName, Set< String > imageColumnNames )
 	{
 		this.tableRows = tableRows;
-		this.imageRootDirectory = imageRootDirectory;
-		this.labelImageColumnName = labelImageColumnName;
 		this.imageColumnNames = imageColumnNames;
-		this.imageColumnNames.remove( labelImageColumnName );
-		extractImagePaths();
 	}
 
 	public Map< String, Set< String > > getColumnNameToImagePaths()
 	{
-		return columnNameToImagePaths;
+		return extractImagePaths();
 	}
 
-	public Set< String > getLabelImagePaths()
+	private HashMap< String, Set< String > > extractImagePaths()
 	{
-		return labelImagePaths;
-	}
+		HashMap< String, Set< String > > columnNameToImagePaths = new HashMap<>(  );
 
-	private void extractImagePaths()
-	{
-		columnNameToImagePaths = new HashMap<>(  );
 		for ( String imageColumnName : imageColumnNames )
 		{
 			columnNameToImagePaths.put( imageColumnName, new HashSet<>( ));
 		}
 
-		labelImagePaths = new HashSet<>(  );
-
 		for ( final T tableRow : tableRows )
 		{
-			labelImagePaths.add( tableRow.getCell( labelImageColumnName ) );
-
 			for ( final String imageColumnName : imageColumnNames )
 			{
 				columnNameToImagePaths.get( imageColumnName ).add( tableRow.getCell( imageColumnName ) );
 			}
 		}
+
+		return columnNameToImagePaths;
 	}
+
 
 	private Set< String > fetchImageColumnNames( List< T > tableRowImageSegments, String imagePathColumIdentifier )
 	{
 		Set< String > columnNames = tableRowImageSegments.get( 0 ).getColumnNames();
 
-		Set< String > imageColumnNames = new HashSet<>( );
-		for ( String columnName : columnNames )
-		{
-			if ( columnName.contains( imagePathColumIdentifier ) )
-				if ( ! columnName.equals( labelImageColumnName ) )
-					imageColumnNames.add( columnName );
-		}
+		Set< String > imageColumnNames = columnNames.stream()
+				.filter( columnName -> columnName.contains( imagePathColumIdentifier ) )
+				.collect( Collectors.toSet() );
 
 		return imageColumnNames;
 	}

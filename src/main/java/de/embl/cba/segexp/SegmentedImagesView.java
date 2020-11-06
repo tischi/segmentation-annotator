@@ -58,20 +58,25 @@ import org.scijava.ui.behaviour.util.Behaviours;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
+import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // TODO: reconsider what a "segment" needs to be here
 public class SegmentedImagesView< T extends ImageSegment, R extends NumericType< R > & RealType< R > >
 {
 	public static final int BACKGROUND = 0;
+
 	private final SelectionColoringModel< T > selectionColoringModel;
-	private HashMap< String, Set< SourceAndConverter< R > > > groupNameToSources;
-	private HashMap< SourceAndConverter< R >, String > labelSourceToLabelImageId;
 	private final SelectionModel< T > selectionModel;
+	private final HashMap< SourceAndConverter< R >, SourceMetadata > rawSourceToMetadata;
+	private HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata;
+
+	private final List< T > tableRowImageSegments;
 
 	private static String selectTrigger = "ctrl button1";
 	private static final String selectNoneTrigger = "ctrl shift N";
@@ -93,30 +98,27 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
 
-
-	public SegmentedImagesView(
-			final List segments,
-			final SelectionColoringModel selectionColoringModel,
-			final HashMap< String, Set< SourceAndConverter< R > > > groupNameToSources,
-			final HashMap< SourceAndConverter< R >, String > labelSourceToLabelImageId )
+	public SegmentedImagesView( final List< T > tableRowImageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
-		this.segments = segments;
+		this.tableRowImageSegments = tableRowImageSegments;
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();
-		this.groupNameToSources = groupNameToSources;
-		this.labelSourceToLabelImageId = labelSourceToLabelImageId;
-		this.name = segments.toString();
+		this.rawSourceToMetadata = sourceToMetadata;
 
+		this.name = segments.toString();
 		initSegments( segments );
 	}
 
+
 	public void showImages( boolean is2D, int numTimePoints )
 	{
-		this.is2D = is2D;
+		this.is2D = is2D; // TODO: fetch this some other way, also the numTimePoints
 
 		createNewBdv( numTimePoints );
 
-		initLabelMaskSources();
+		new HashSet<>( rawSourceToMetadata.keySet() );
+
+		initSources();
 		showSources();
 
 		registerAsSelectionListener( this.selectionColoringModel.getSelectionModel() );
@@ -145,32 +147,53 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		bdvHandle = bdv;
 	}
 
-	private void initLabelMaskSources()
+	private void initSources()
 	{
-		Logger.log("Initializing label mask sources...");
-		Set< SourceAndConverter< R > > labelsSources = new HashSet<>( labelSourceToLabelImageId.keySet() );
+		Logger.log("Initializing sources...");
 
-		labelsSources.stream().forEach( source ->
+		sourceToMetadata = new HashMap<>(  );
+
+		rawSourceToMetadata.keySet().forEach( source ->
 		{
-			String labelImageId = labelSourceToLabelImageId.get( source );
+			SourceMetadata metadata = rawSourceToMetadata.get( source );
 
-			SegmentsRealTypeConverter segmentsConverter = new SegmentsRealTypeConverter(
-				labelFrameAndImageToSegment,
-				labelImageId,
-				selectionColoringModel );
+			if ( is2D )
+			{
+				AffineTransform3D sourceTransform = new AffineTransform3D();
+				source.getSpimSource().getSourceTransform( 0, 0, sourceTransform );
+				double offset = sourceTransform.get( 2, 3 );
+				double zScale = sourceTransform.get( 2, 2 );
+				AffineTransform3D offsetToZeroTransform = new AffineTransform3D();
+				offsetToZeroTransform.translate( new double[]{ 0, 0, -offset } );
+				SourceAffineTransformer transformer = new SourceAffineTransformer( source, offsetToZeroTransform );
+				source = transformer.getSourceOut();
+			}
 
-			bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
+			if ( metadata.isPrimaryLabelSource )
+			{
+				source = asLabelMaskSource( source, metadata.imageId );
+			}
 
-			LabelMaskSource< R > labelMaskVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource() );
-			SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( labelMaskVolatileSource , segmentsConverter );
-			LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource() );
-			SourceAndConverter sourceAndConverter = new SourceAndConverter( labelMaskSource, segmentsConverter, volatileSourceAndConverter );
-
-			// the source object has changed => replace in the map
-			labelSourceToLabelImageId.remove( source );
-			Logger.log( "Initialised " + sourceAndConverter.getSpimSource().getName() + " with label image identifier " + labelImageId );
-			labelSourceToLabelImageId.put( sourceAndConverter, labelImageId );
+			sourceToMetadata.put( source, metadata );
 		} );
+
+
+	}
+
+	@NotNull
+	private SourceAndConverter< R > asLabelMaskSource( SourceAndConverter< R > source, String labelImageId )
+	{
+		SegmentsRealTypeConverter segmentsConverter = new SegmentsRealTypeConverter(
+			labelFrameAndImageToSegment,
+			labelImageId,
+			selectionColoringModel );
+
+		bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
+
+		LabelMaskSource< R > labelMaskVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource() );
+		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( labelMaskVolatileSource , segmentsConverter );
+		LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource() );
+		return new SourceAndConverter( labelMaskSource, segmentsConverter, volatileSourceAndConverter );
 	}
 
 	private void showSources()
@@ -181,24 +204,22 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void showOtherSources()
 	{
-		Logger.log("Showing other sources...");
-
 		groupNameToSources.keySet().forEach( groupName ->
 		{
 			groupNameToSources.get( groupName ).forEach( source ->
 			{
-				// TODO: group in terms of B&C
 				//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
+				// TODO: group in terms of B&C
 				addSourceToBdv( source );
-				//new BrightnessAutoAdjuster( source, 0 ).run();
 			} );
+
+			//new BrightnessAutoAdjuster( source, 0 ).run(); // TODO: maybe for whole group?
 		} );
 	}
 
 	private void addSourceToBdv( SourceAndConverter< R > source )
 	{
 		// SourceAndConverterServices.getSourceAndConverterDisplayService().show( source );
-
 		bdvHandle.getViewerPanel().state().addSource( source );
 		bdvHandle.getViewerPanel().state().setSourceActive( source, true );
 		ConverterSetup converterSetup = SourceAndConverterUtils.createConverterSetup( source );
@@ -207,22 +228,18 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void showLabelMaskSources()
 	{
-		Logger.log("Showing label mask sources...");
-
-		labelSourceToLabelImageId.keySet().forEach( source ->
-		{
-			Logger.log("Showing source: " + source.getSpimSource().getName() );
-			addSourceToBdv( source );
-		} );
-
+		// focus on one source
 		labelSourceToLabelImageId.keySet().stream().limit( 1 ).forEach( source ->
 		{
 			AffineTransform3D transform = new ViewerTransformAdjuster( bdvHandle, source ).getTransform();
-			if ( is2D )
-			{
-				transform.set( 0.0, 2, 3); // center around z
-			}
+			if ( is2D ) transform.set( 0.0, 2, 3); // zero z offset
 			bdvHandle.getViewerPanel().state().setViewerTransform( transform );
+		} );
+
+		// add all sources
+		labelSourceToLabelImageId.keySet().forEach( source ->
+		{
+			addSourceToBdv( source );
 		} );
 	}
 
