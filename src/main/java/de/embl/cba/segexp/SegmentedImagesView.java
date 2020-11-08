@@ -29,7 +29,10 @@
 package de.embl.cba.segexp;
 
 import bdv.tools.brightness.ConverterSetup;
-import bdv.util.*;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvHandle;
+import bdv.util.BdvOptions;
+import bdv.util.BdvStackSource;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
@@ -37,7 +40,9 @@ import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
 import de.embl.cba.bdv.utils.sources.Metadata;
-import de.embl.cba.tables.color.*;
+import de.embl.cba.tables.color.CategoryColoringModel;
+import de.embl.cba.tables.color.ColoringModel;
+import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.imagesegment.ImageSegment;
 import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
@@ -60,10 +65,9 @@ import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
-
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // TODO: reconsider what a "segment" needs to be here

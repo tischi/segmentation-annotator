@@ -51,12 +51,12 @@ public class LabelMaskSource< T extends NumericType< T > & RealType< T > > imple
 		this.boundaryWidth = boundaryWidth;
 	}
 
-	@Override
-	public boolean doBoundingBoxCulling()
-	{
-//		System.out.println( "Source " + source.getName() + " culling: " + source.doBoundingBoxCulling() );
-		return source.doBoundingBoxCulling();
-	}
+//	@Override
+//	public boolean doBoundingBoxCulling()
+//	{
+////		System.out.println( "Source " + source.getName() + " culling: " + source.doBoundingBoxCulling() );
+//		return source.doBoundingBoxCulling();
+//	}
 
 
 	@Override
