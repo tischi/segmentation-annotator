@@ -46,7 +46,7 @@ public class SegmentsDatasetOpener implements Runnable
 		sourceToMetadata = openSources( rootDirectory, columnNameToImagePaths );
 		sourceToMetadata.values().forEach( metadata ->
 		{
-			metadata.isPrimaryLabelSource = metadata.groupId.equals( labelImageColumnName );
+			metadata.isPrimaryLabelSource = metadata.groupId.contains( labelImageColumnName );
 		});
 	}
 
@@ -63,10 +63,11 @@ public class SegmentsDatasetOpener implements Runnable
 			{
 				String absolutePath = Utils.createAbsolutePath( rootDirectory, imagePath );
 				HashMap< SourceAndConverter< ? >, SourceMetadata > sourcesFromPathToMetadata = opener.open( absolutePath );
-				sourcesFromPathToMetadata.values().forEach( metadata ->
+				sourcesFromPathToMetadata.keySet().forEach( source ->
 				{
+					SourceMetadata metadata = sourcesFromPathToMetadata.get( source );
 					metadata.imageId = imagePath;
-					metadata.groupId = columnName;
+					metadata.groupId = columnName + metadata.channelName;
 				} );
 				sourceToMetadata.putAll( sourcesFromPathToMetadata );
 			});

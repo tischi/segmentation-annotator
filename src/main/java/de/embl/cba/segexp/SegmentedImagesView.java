@@ -221,7 +221,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		}
 	}
 
-	// TODO: does not show up in UI
+	// TODO: the group Ids do not contain the channel name
 	private void addSourceToGroup( HashMap< String, SourceGroup > groupIdToSourceGroup, SourceAndConverter< R > source )
 	{
 		String groupId = sourceToMetadata.get( source ).groupId;

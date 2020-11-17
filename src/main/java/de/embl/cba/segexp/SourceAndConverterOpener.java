@@ -39,11 +39,16 @@ public class SourceAndConverterOpener
 
 		sourceAndConverters.forEach( source ->
 		{
-			SourceMetadata sourceMetadata = new SourceMetadata();
+			SourceMetadata metadata = new SourceMetadata();
+			String imageName = Utils.removeFilenameExtension( imagePath );
+			String sourceName = source.getSpimSource().getName();
+			String channelName = sourceName.replace( imageName, "" );
+			metadata.channelName = channelName;
 			// TODO: maybe put some metadata, e.g., 2D here, but it could be expensive to access the source
-			sourceToMetadata.put( source, sourceMetadata );
+			sourceToMetadata.put( source, metadata );
 		});
 
 		return sourceToMetadata;
 	}
+
 }
