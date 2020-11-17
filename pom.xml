@@ -75,12 +75,12 @@
 		<scijava.app.directory>/Applications/Fiji.app/</scijava.app.directory>
 		<enforcer.skip>true</enforcer.skip>
 
+		<bigdataviewer-bioformats.version>0.2.9</bigdataviewer-bioformats.version>
+		<bigdataviewer-playground.version>0.2.7-SNAPSHOT</bigdataviewer-playground.version>
+		<imglib2-cache.version>1.0.0-beta-15</imglib2-cache.version>
+		<imagej-utils.version>0.5.5-SNAPSHOT</imagej-utils.version>
 		<bigdataviewer-core.version>10.0.2</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-23</bigdataviewer-vistools.version>
-		<bigdataviewer-bioformats.version>0.2.11-SNAPSHOT</bigdataviewer-bioformats.version>
-		<bigdataviewer-playground.version>0.2.7-SNAPSHOT</bigdataviewer-playground.version>
-		<imagej-utils.version>0.5.5-SNAPSHOT</imagej-utils.version>
-		<imglib2-cache.version>1.0.0-beta-15</imglib2-cache.version>
 	</properties>
 
 

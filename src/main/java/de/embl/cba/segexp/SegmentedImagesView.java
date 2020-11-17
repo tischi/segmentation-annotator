@@ -33,9 +33,7 @@ import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
-import bdv.viewer.Interpolation;
-import bdv.viewer.Source;
-import bdv.viewer.SourceAndConverter;
+import bdv.viewer.*;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
@@ -97,6 +95,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private boolean labelMasksShownAsBoundaries = false;
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
+	private SynchronizedViewerState state;
 
 	public SegmentedImagesView( final List< T > tableRowImageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
@@ -143,6 +142,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		bdv.getViewerPanel().setNumTimepoints( numTimePoints );
 
 		bdvHandle = bdv;
+		state = bdvHandle.getViewerPanel().state();
 	}
 
 	private void initSources()
@@ -199,16 +199,43 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		// focus on one of the sources
 		AffineTransform3D transform = new ViewerTransformAdjuster( bdvHandle, sources.iterator().next() ).getTransform();
 		if ( is2D ) transform.set( 0.0, 2, 3); // zero z offset
-		bdvHandle.getViewerPanel().state().setViewerTransform( transform );
+		state.setViewerTransform( transform );
+
+		HashMap< String, SourceGroup > groupIdToSourceGroup = new HashMap< String, SourceGroup >();
 
 		// display all
 		sources.forEach( source ->
 		{
 			//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
-			// TODO: group in terms of B&C
+
 			addSourceToBdv( source );
+			addSourceToGroup( groupIdToSourceGroup, source );
+
 			//new BrightnessAutoAdjuster( source, 0 ).run(); // TODO: maybe for whole group?
 		} );
+
+		// remove all the default groups
+		for ( int i = 0; i < 10; i++ )
+		{
+			state.removeGroup( state.getCurrentGroup() );
+		}
+	}
+
+	// TODO: does not show up in UI
+	private void addSourceToGroup( HashMap< String, SourceGroup > groupIdToSourceGroup, SourceAndConverter< R > source )
+	{
+		String groupId = sourceToMetadata.get( source ).groupId;
+		if ( ! groupIdToSourceGroup.keySet().contains( groupId ) )
+		{
+			SourceGroup sourceGroup = new SourceGroup();
+			groupIdToSourceGroup.put( groupId, sourceGroup );
+			state.addGroup( sourceGroup );
+			state.setGroupName( sourceGroup, groupId );
+			state.setGroupActive( sourceGroup, true );
+		}
+
+		SourceGroup sourceGroup = groupIdToSourceGroup.get( groupId );
+		state.addSourceToGroup( source, sourceGroup );
 	}
 
 	private void addSourceToBdv( SourceAndConverter< R > source )

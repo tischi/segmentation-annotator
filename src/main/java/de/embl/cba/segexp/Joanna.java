@@ -11,9 +11,8 @@ import net.imagej.ImageJ;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
-public class TestRunner
+public class Joanna
 {
 	public static void main( String[] args )
 	{
@@ -41,5 +40,4 @@ public class TestRunner
 		tableView.setSelectionMode( TableRowsTableView.SelectionMode.FocusOnly );
 		tableView.showTableAndMenu( imagesView.getWindow() );
 	}
-
 }
