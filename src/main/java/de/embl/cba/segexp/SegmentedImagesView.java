@@ -34,10 +34,12 @@ import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import bdv.viewer.*;
+import bdv.viewer.DisplayMode;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
-import de.embl.cba.bdv.utils.sources.Metadata;
+import de.embl.cba.segexp.converters.LabelsConverter;
+import de.embl.cba.segexp.converters.SegmentsConverter;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
@@ -48,6 +50,7 @@ import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
+import net.imglib2.converter.Converter;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -116,7 +119,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		new HashSet<>( rawSourceToMetadata.keySet() );
 
 		initSources();
-		showSources(); // TODO focus on some source
+		showSources();
 
 		registerAsSelectionListener( this.selectionColoringModel.getSelectionModel() );
 		registerAsColoringListener( this.selectionColoringModel );
@@ -169,27 +172,48 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			if ( metadata.isPrimaryLabelSource )
 			{
-				source = asLabelMaskSource( source, metadata.imageId );
+				source = asPrimaryLabelSource( source, metadata.imageId );
+			}
+			else if ( metadata.isLabelSource )
+			{
+				source = asLabelSource( source );
 			}
 
 			sourceToMetadata.put( source, metadata );
 		} );
 	}
 
-	@NotNull
-	private SourceAndConverter< R > asLabelMaskSource( SourceAndConverter< R > source, String labelImageId )
+	private SourceAndConverter< R > asPrimaryLabelSource( SourceAndConverter< R > source, String labelImageId )
 	{
-		SegmentsRealTypeConverter segmentsConverter = new SegmentsRealTypeConverter(
+		SegmentsConverter segmentsConverter = new SegmentsConverter(
 			labelFrameAndImageToSegment,
 			labelImageId,
 			selectionColoringModel );
 
 		bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-		LabelMaskSource< R > labelMaskVolatileSource = new LabelMaskSource( source.asVolatile().getSpimSource() );
-		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter<>( labelMaskVolatileSource , segmentsConverter );
-		LabelMaskSource< R > labelMaskSource = new LabelMaskSource( source.getSpimSource() );
-		return new SourceAndConverter( labelMaskSource, segmentsConverter, volatileSourceAndConverter );
+		SourceAndConverter sourceAndConverter = getSourceAndConverter( source, segmentsConverter );
+
+		return sourceAndConverter;
+	}
+
+	private SourceAndConverter< R > asLabelSource( SourceAndConverter< R > source )
+	{
+		LabelsConverter labelsConverter = new LabelsConverter();
+
+		SourceAndConverter sourceAndConverter = getSourceAndConverter( source, labelsConverter );
+
+		return sourceAndConverter;
+	}
+
+	private SourceAndConverter getSourceAndConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
+	{
+		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
+		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
+		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
+		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
+
+		return sourceAndConverter;
 	}
 
 	private void showSources()
@@ -203,18 +227,14 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		HashMap< String, SourceGroup > groupIdToSourceGroup = new HashMap< String, SourceGroup >();
 
-		// display all
 		sources.forEach( source ->
 		{
-			//SourceAndConverterServices.getSourceAndConverterDisplayService().show( bdvHandle, source );
-
 			addSourceToBdv( source );
 			addSourceToGroup( groupIdToSourceGroup, source );
-
-			//new BrightnessAutoAdjuster( source, 0 ).run(); // TODO: maybe for whole group?
+			state.setDisplayMode( DisplayMode.FUSEDGROUP );
 		} );
 
-		// remove all the default groups
+		// remove default groups
 		for ( int i = 0; i < 10; i++ )
 		{
 			state.removeGroup( state.getCurrentGroup() );
@@ -301,23 +321,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		this.segmentFocusAnimationDurationMillis = duration;
 	}
 
-	// TODO: clean this up! There should only be one way to decide whether this is a labelSource
-	public boolean isLabelSource( Metadata metadata )
-	{
-		if ( metadata.type != null && metadata.type.equals( Metadata.Type.Segmentation ) )
-		{
-				return true;
-		}
-		else if ( metadata.modality == Metadata.Modality.Segmentation  )
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 	private void installBdvBehavioursAndPopupMenu()
 	{
 		behaviours = new Behaviours( new InputTriggerConfig() );
@@ -327,7 +330,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		installUndoSelectionBehaviour();
 		installSelectionColoringModeBehaviour();
 		installRandomColorShufflingBehaviour();
-		installShowLabelMaskAsBinaryMaskBehaviour();
+		installShowLabelMaskAsBinaryMaskBehaviour(); // TODO: make popup
 		installShowLabelMaskAsBoundaryBehaviour();
 
 		addUndoSelectionPopupMenu();
@@ -339,7 +342,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private void addAnimationSettingsPopupMenu()
 	{
 		final ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getLabelImageMenuName() );
+		menuNames.add( getSegmentsMenuName() );
 		final String actionName = "Segment Animation Settings...";
 		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
 		BdvPopupMenus.addAction(
@@ -354,7 +357,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private void addUndoSelectionPopupMenu()
 	{
 		final ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getLabelImageMenuName() );
+		menuNames.add( getSegmentsMenuName() );
 
 		final String actionName = "Undo Segment Selections" + BdvUtils.getShortCutString( selectNoneTrigger );
 		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
@@ -369,7 +372,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private void addSelectionColoringModePopupMenu()
 	{
 		final ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getLabelImageMenuName() );
+		menuNames.add( getSegmentsMenuName() );
 		menuNames.add( "Segment Selection Coloring Mode" );
 
 		final SelectionColoringModel.SelectionColoringMode[] selectionColoringModes = SelectionColoringModel.SelectionColoringMode.values();
@@ -391,7 +394,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private void addShowLabelMaskAsBoundaryPopupMenu()
 	{
 		final ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getLabelImageMenuName() );
+		menuNames.add( getSegmentsMenuName() ); // TODO: populate with the different label mask groups
 
 		BdvPopupMenus.addAction(
 				bdvHandle,
@@ -402,9 +405,9 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	}
 
 	@NotNull
-	private String getLabelImageMenuName()
+	private String getSegmentsMenuName()
 	{
-		return "Label Masks";
+		return "Segments";
 	}
 
 	private void changeAnimationSettingsUI()
@@ -468,7 +471,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 //		BdvUtils.repaint( bdvHandle );
 	}
 
-	// TODO: add to context menu?
 	private synchronized void labelMasksAsBoundaryDialog()
 	{
 		LabelMaskAsBoundaryDialog dialog = new LabelMaskAsBoundaryDialog();
@@ -479,10 +481,10 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		Set< SourceAndConverter< R > > labelSources = getLabelSources();
 		labelSources.forEach( source ->
 		{
-			if ( ! ( source.getSpimSource() instanceof LabelMaskSource ) ) return;
+			if ( ! ( source.getSpimSource() instanceof LabelSource ) ) return;
 
-			(( LabelMaskSource ) source.getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
-			(( LabelMaskSource ) source.asVolatile().getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
+			(( LabelSource ) source.getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
+			(( LabelSource ) source.asVolatile().getSpimSource() ).showAsBoundary( showAsBoundary, boundaryThickness );
 		});
 
 		labelMasksShownAsBoundaries = ! labelMasksShownAsBoundaries;
@@ -603,8 +605,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 			if ( labelSources.contains( source ) )
 			{
 				Source< R > spimSource = ( Source< R > ) source.getSpimSource();
-				if ( spimSource instanceof LabelMaskSource )
-					spimSource = ( ( LabelMaskSource ) spimSource ).getWrappedSource();
+				if ( spimSource instanceof LabelSource )
+					spimSource = ( ( LabelSource ) spimSource ).getWrappedSource();
 				
 				final Double labelIndex = BdvUtils.getPixelValue( spimSource, globalMouseCoordinates, currentTimepoint );
 

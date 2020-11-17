@@ -32,14 +32,14 @@ import java.util.Map;
  * @param <T>
  *            the type of the original source.
  */
-public class LabelMaskSource< T extends NumericType< T > & RealType< T > > implements Source< T >
+public class LabelSource< T extends NumericType< T > & RealType< T > > implements Source< T >
 {
 	protected final Source< T > source;
 	private final DefaultInterpolators< T > interpolators;
 	private boolean showAsBoundaries;
 	private int boundaryWidth;
 
-	public LabelMaskSource( final Source< T > source )
+	public LabelSource( final Source< T > source )
 	{
 		this.source = source;
 		this.interpolators = new DefaultInterpolators();

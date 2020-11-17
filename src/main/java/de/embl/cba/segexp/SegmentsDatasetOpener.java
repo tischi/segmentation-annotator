@@ -46,6 +46,7 @@ public class SegmentsDatasetOpener implements Runnable
 		sourceToMetadata = openSources( rootDirectory, columnNameToImagePaths );
 		sourceToMetadata.values().forEach( metadata ->
 		{
+			metadata.isLabelSource = metadata.groupId.contains( "label" );
 			metadata.isPrimaryLabelSource = metadata.groupId.contains( labelImageColumnName );
 		});
 	}

@@ -26,38 +26,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segexp;
+package de.embl.cba.segexp.converters;
 
-import bdv.viewer.TimePointListener;
-import de.embl.cba.tables.color.ColoringModel;
-import de.embl.cba.tables.imagesegment.ImageSegment;
-import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
+import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
+import de.embl.cba.tables.color.LabelsARGBConverter;
+import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import net.imglib2.Volatile;
 import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.volatiles.VolatileARGBType;
 
-import java.util.Map;
-
-public class SegmentsRealTypeConverter< T extends ImageSegment > implements Converter< RealType, ARGBType >, TimePointListener
+public class LabelsConverter implements Converter< RealType, ARGBType >
 {
-	private final Map< LabelFrameAndImage, T > labelFrameAndImageToSegment;
-	private final String imageId;
-	private final ColoringModel< T > coloringModel;
+	private final LazyCategoryColoringModel< Double > coloringModel;
 	private ARGBType singleColor;
 
-	private int frame;
-
-	public SegmentsRealTypeConverter(
-			Map< LabelFrameAndImage, T > labelFrameAndImageToSegment,
-			String imageId,
-			ColoringModel coloringModel )
+	public LabelsConverter()
 	{
-		this.labelFrameAndImageToSegment = labelFrameAndImageToSegment;
-		this.imageId = imageId;
-		this.coloringModel = coloringModel;
-		this.singleColor = null;
-		this.frame = 0;
+		this.coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 	}
 
 	@Override
@@ -72,7 +59,9 @@ public class SegmentsRealTypeConverter< T extends ImageSegment > implements Conv
 			}
 		}
 
-		if ( label.getRealDouble() == 0 )
+		final double realDouble = label.getRealDouble();
+
+		if ( realDouble == 0 )
 		{
 			color.set( 0 );
 			return;
@@ -84,27 +73,12 @@ public class SegmentsRealTypeConverter< T extends ImageSegment > implements Conv
 			return;
 		}
 
-		final LabelFrameAndImage labelFrameAndImage = new LabelFrameAndImage( label.getRealDouble(), frame, imageId  );
-
-		final T imageSegment = labelFrameAndImageToSegment.get( labelFrameAndImage );
-
-		if ( imageSegment == null )
-		{
-			color.set( 0 );
-		}
-		else
-		{
-			coloringModel.convert( imageSegment, color );
-
-			final int alpha = ARGBType.alpha( color.get() );
-			if( alpha < 255 )
-				color.mul( alpha / 255.0 );
-		}
+		coloringModel.convert( realDouble, color );
 	}
 
-	public void timePointChanged( int timePointIndex )
+	public LazyCategoryColoringModel< Double > getColoringModel()
 	{
-		this.frame = timePointIndex;
+		return coloringModel;
 	}
 
 	public void setSingleColor( ARGBType argbType )
