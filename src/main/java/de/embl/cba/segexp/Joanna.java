@@ -23,7 +23,7 @@ public class Joanna
 		// rootDirectory = "/Users/tischer/Desktop/STX_treated_cells_1_1exp";
 
 		// open data table (= segments) and images
-		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv", false );
+		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv" );
 		opener.run();
 		List< TableRowImageSegment > tableRowImageSegments = opener.getSegments();
 		HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata = opener.getSourceToMetadata();
@@ -39,5 +39,6 @@ public class Joanna
 		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
 		tableView.setSelectionMode( TableRowsTableView.SelectionMode.FocusOnly );
 		tableView.showTableAndMenu( imagesView.getWindow() );
+		imagesView.setTableView( tableView );
 	}
 }

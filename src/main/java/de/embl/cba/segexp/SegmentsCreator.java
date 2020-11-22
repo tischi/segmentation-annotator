@@ -44,20 +44,18 @@ import static de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDia
 public class SegmentsCreator
 {
 	private final String tablePath;
-	private boolean isOneBasedTimePoint; // ...or zero based
 	private String labelImageColumnName;
 
-	public SegmentsCreator( String tablePath, boolean isOneBasedTimePoint )
+	public SegmentsCreator( String tablePath )
 	{
 		this.tablePath = tablePath;
-		this.isOneBasedTimePoint = isOneBasedTimePoint;
 	}
 
 	public List< TableRowImageSegment > createSegments()
 	{
 		Logger.info("Creating image segments table from file: " + tablePath );
 
-		final List< TableRowImageSegment > tableRowImageSegments = createTableRowImageSegments( tablePath, isOneBasedTimePoint );
+		final List< TableRowImageSegment > tableRowImageSegments = createTableRowImageSegments( tablePath );
 
 		return tableRowImageSegments;
 	}
@@ -67,11 +65,14 @@ public class SegmentsCreator
 		return labelImageColumnName;
 	}
 
-	private List< TableRowImageSegment > createTableRowImageSegments( String tablePath, boolean isOneBasedTimePoint )
+	private List< TableRowImageSegment > createTableRowImageSegments( String tablePath )
 	{
 		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath );
 
+		// TODO: Ask here about whether or not time points are one or zero based!
 		final SegmentPropertyColumnsSelectionDialog selectionDialog = new SegmentPropertyColumnsSelectionDialog( columnNameToColumnEntries.keySet() );
+		boolean isOneBasedTimePoint = false;
+
 		Map< SegmentProperty, String > segmentPropertyToColumnName = selectionDialog.fetchUserInput();
 
 		labelImageColumnName = segmentPropertyToColumnName.get( SegmentProperty.LabelImage );

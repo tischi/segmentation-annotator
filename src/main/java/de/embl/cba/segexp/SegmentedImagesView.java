@@ -48,6 +48,7 @@ import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
+import de.embl.cba.tables.view.TableRowsTableView;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
 import net.imglib2.converter.Converter;
@@ -99,6 +100,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
 	private SynchronizedViewerState state;
+	private TableRowsTableView< ? > tableView;
 
 	public SegmentedImagesView( final List< T > tableRowImageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
@@ -331,12 +333,44 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		installSelectionColoringModeBehaviour();
 		installRandomColorShufflingBehaviour();
 		installShowLabelMaskAsBinaryMaskBehaviour(); // TODO: make popup
-		installShowLabelMaskAsBoundaryBehaviour();
+		// installShowLabelMaskAsBoundaryBehaviour();
 
 		addUndoSelectionPopupMenu();
+		addStartNewAnnotationPopupMenu();
+		addContinueAnnotationPopupMenu();
 		addSelectionColoringModePopupMenu();
 		addShowLabelMaskAsBoundaryPopupMenu();
 		addAnimationSettingsPopupMenu();
+	}
+
+	private void addStartNewAnnotationPopupMenu()
+	{
+		ArrayList< String > menuNames = new ArrayList<>();
+		menuNames.add( getSegmentsMenuName() );
+		menuNames.add( "Annotate" );
+		String actionName = "Start New Annotation...";
+		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				menuNames,
+				actionName,
+				( x, y ) -> new Thread( () -> tableView.showNewAnnotationDialog() ).start()
+		);
+	}
+
+	private void addContinueAnnotationPopupMenu()
+	{
+		ArrayList< String > menuNames = new ArrayList<>();
+		menuNames.add( getSegmentsMenuName() );
+		menuNames.add( "Annotate" );
+		String actionName = "Continue Annotation...";
+		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				menuNames,
+				actionName,
+				( x, y ) -> new Thread( () -> tableView.showContinueAnnotationDialog() ).start()
+		);
 	}
 
 	private void addAnimationSettingsPopupMenu()
@@ -359,7 +393,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		final ArrayList< String > menuNames = new ArrayList<>();
 		menuNames.add( getSegmentsMenuName() );
 
-		final String actionName = "Undo Segment Selections" + BdvUtils.getShortCutString( selectNoneTrigger );
+		final String actionName = "Select None" + BdvUtils.getShortCutString( selectNoneTrigger );
 		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
 		BdvPopupMenus.addAction(
 				bdvHandle,
@@ -648,5 +682,10 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		{
 			BdvPopupMenus.removeAction( bdvHandle, popupActionName );
 		}
+	}
+
+	public void setTableView( TableRowsTableView< ? > tableView )
+	{
+		this.tableView = tableView;
 	}
 }

@@ -11,7 +11,6 @@ public class SegmentsDatasetOpener implements Runnable
 {
 	private String rootDirectory;
 	private String relativeTablePath;
-	private boolean isOneBasedTimePoint;
 	private HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata;
 	private List< TableRowImageSegment > segments;
 
@@ -21,14 +20,15 @@ public class SegmentsDatasetOpener implements Runnable
 	 * isPrimaryLabelSource = ( imagePathColumnName == labelImageColumnName )
 	 *
 	 * @param rootDirectory
+	 * 			The root directory of the dataset; paths to images in the table must be relative to this
 	 * @param relativeTablePath
-	 * @param isOneBasedTimePoint
+	 * 			The path to the segments table, relative to the root directory.
+	 * 			Each row in the table must contain information about one image segment
 	 */
-	public SegmentsDatasetOpener( String rootDirectory, String relativeTablePath, boolean isOneBasedTimePoint )
+	public SegmentsDatasetOpener( String rootDirectory, String relativeTablePath )
 	{
 		this.rootDirectory = rootDirectory;
 		this.relativeTablePath = relativeTablePath;
-		this.isOneBasedTimePoint = isOneBasedTimePoint;
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class SegmentsDatasetOpener implements Runnable
 	{
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
 
-		SegmentsCreator segmentsCreator = new SegmentsCreator( tablePath, isOneBasedTimePoint );
+		SegmentsCreator segmentsCreator = new SegmentsCreator( tablePath );
 		segments = segmentsCreator.createSegments();
 		String labelImageColumnName = segmentsCreator.getLabelImageColumnName();
 

@@ -72,8 +72,8 @@
 		<package-name>de.embl.cba</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
-		<scijava.app.directory>/Applications/Fiji.app/</scijava.app.directory>
-		<enforcer.skip>true</enforcer.skip>
+		<scijava.app.directory>/Users/tischer/Desktop/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
+<!--		<enforcer.skip>true</enforcer.skip>-->
 
 		<bigdataviewer-bioformats.version>0.2.11-SNAPSHOT</bigdataviewer-bioformats.version>
 		<bigdataviewer-playground.version>0.2.7-SNAPSHOT</bigdataviewer-playground.version>
