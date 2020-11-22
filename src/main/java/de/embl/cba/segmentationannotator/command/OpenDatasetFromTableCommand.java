@@ -1,15 +1,20 @@
-package de.embl.cba.segexp.command;
+package de.embl.cba.segmentationannotator.command;
 
-import de.embl.cba.segexp.SegmentsDatasetOpener;
+import de.embl.cba.segmentationannotator.SegmentsDatasetOpener;
+import net.imagej.ImageJ;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
-@Plugin(type = Command.class, menuPath = "Segmentations Explorer > Open Dataset from Table..." )
+@Plugin(type = Command.class, menuPath = "Segmentation Explorer > Open Dataset from Table..." )
 public class OpenDatasetFromTableCommand implements Command
 {
+	/**
+	 * Each row must contain information about one image segment.
+	 * Paths to images in the table must be relative to the parent directory of the table.
+	 */
 	@Parameter( label = "Segments table" )
 	File segmentsTableFile;
 
@@ -20,5 +25,12 @@ public class OpenDatasetFromTableCommand implements Command
 		String relativeTablePath = segmentsTableFile.getName();
 		SegmentsDatasetOpener datasetOpener = new SegmentsDatasetOpener( rootDirectory, relativeTablePath );
 		datasetOpener.run();
+	}
+
+	public static void main( String[] args )
+	{
+		ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+		// Run plugin from ImageJ Plugins menu.
 	}
 }

@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
 import bdv.tools.brightness.ConverterSetup;
 import bdv.util.BdvFunctions;
@@ -38,8 +38,8 @@ import bdv.viewer.DisplayMode;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
-import de.embl.cba.segexp.converters.LabelsConverter;
-import de.embl.cba.segexp.converters.SegmentsConverter;
+import de.embl.cba.segmentationannotator.converters.LabelsConverter;
+import de.embl.cba.segmentationannotator.converters.SegmentsConverter;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;

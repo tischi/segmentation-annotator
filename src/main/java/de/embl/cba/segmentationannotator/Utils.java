@@ -1,4 +1,4 @@
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;

@@ -9,10 +9,10 @@
 	</parent>
 
 	<groupId>de.embl.cba</groupId>
-	<artifactId>segmentations-explorer</artifactId>
+	<artifactId>segmentation-annotator</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>segmentations-explorer</name>
+	<name>segmentation-annotator</name>
 	<description>TODO</description>
 	<inceptionYear>2018</inceptionYear>
 	<organization>
@@ -54,14 +54,14 @@
 	</mailingLists>
 	
 	<scm>
-		<connection>scm:git:git://github.com/tischi/segmentations-explorer</connection>
-		<developerConnection>scm:git:git@github.com/tischi/segmentations-explorer</developerConnection>
+		<connection>scm:git:git://github.com/tischi/segmentation-annotator</connection>
+		<developerConnection>scm:git:git@github.com/tischi/segmentation-annotator</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/tischi/segmentations-explorer</url>
+		<url>https://github.com/tischi/segmentation-annotator</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/tischi/segmentations-explorer/issues</url>
+		<url>https://github.com/tischi/segmentation-annotator/issues</url>
 	</issueManagement>
 	
 	<ciManagement>

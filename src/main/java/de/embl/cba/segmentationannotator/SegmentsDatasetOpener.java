@@ -1,4 +1,4 @@
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.Logger;

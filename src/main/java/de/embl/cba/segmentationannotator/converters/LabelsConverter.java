@@ -26,16 +26,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segexp.converters;
+package de.embl.cba.segmentationannotator.converters;
 
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
-import de.embl.cba.tables.color.LabelsARGBConverter;
 import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import net.imglib2.Volatile;
 import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.volatiles.VolatileARGBType;
 
 public class LabelsConverter implements Converter< RealType, ARGBType >
 {

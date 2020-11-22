@@ -1,4 +1,4 @@
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
 import bdv.BigDataViewer;
 import bdv.tools.brightness.ConverterSetup;

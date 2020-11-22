@@ -1,6 +1,5 @@
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
-import bdv.util.BdvFunctions;
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
@@ -15,10 +14,6 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A {@link Source} that wraps another {@link Source} and allows to decorate it

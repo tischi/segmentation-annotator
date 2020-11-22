@@ -1,4 +1,4 @@
-package de.embl.cba.segexp;
+package de.embl.cba.segmentationannotator;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
@@ -7,24 +7,27 @@ import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import de.embl.cba.tables.view.TableRowsTableView;
-import net.imagej.ImageJ;
 
 import java.util.HashMap;
 import java.util.List;
 
-public class Joanna
+public class SegmentationAnnotator
 {
-	public static void main( String[] args )
+	private final String rootDirectory;
+	private final String relativeTablePath;
+
+	public SegmentationAnnotator( String rootDirectory, String relativeTablePath )
 	{
-		ImageJ ij = new ImageJ();
-		ij.ui().showUI();
 
-		String rootDirectory = "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data";
-		// rootDirectory = "/Users/tischer/Desktop/STX_treated_cells_1_1exp";
+		this.rootDirectory = rootDirectory;
+		this.relativeTablePath = relativeTablePath;
+	}
 
-		// open data table (= segments) and images
-		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, "table.csv" );
+	public void run()
+	{
+		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, relativeTablePath );
 		opener.run();
+
 		List< TableRowImageSegment > tableRowImageSegments = opener.getSegments();
 		HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata = opener.getSourceToMetadata();
 
