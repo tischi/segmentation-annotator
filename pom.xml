@@ -13,7 +13,8 @@
 	<version>0.1.0-SNAPSHOT</version>
 
 	<name>segmentation-annotator</name>
-	<description>TODO</description>
+	<description>Explore and annotate image segmentations</description>
+	<url>https://github.com/tischi/segmentation-annotator</url>
 	<inceptionYear>2018</inceptionYear>
 	<organization>
 		<name>EMBL</name>
@@ -73,8 +74,9 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
 		<scijava.app.directory>/Users/tischer/Desktop/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
-<!--		<enforcer.skip>true</enforcer.skip>-->
+		<enforcer.skip>true</enforcer.skip>
 
+		<!-- Below versions are very "new" and not entirely compatible with the current Fiji -->
 		<bigdataviewer-bioformats.version>0.2.11-SNAPSHOT</bigdataviewer-bioformats.version>
 		<bigdataviewer-playground.version>0.2.7-SNAPSHOT</bigdataviewer-playground.version>
 		<imglib2-cache.version>1.0.0-beta-15</imglib2-cache.version>

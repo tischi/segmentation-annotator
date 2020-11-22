@@ -1,5 +1,6 @@
 package de.embl.cba.segmentationannotator.command;
 
+import de.embl.cba.segmentationannotator.SegmentationAnnotator;
 import de.embl.cba.segmentationannotator.SegmentsDatasetOpener;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
@@ -8,7 +9,7 @@ import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
-@Plugin(type = Command.class, menuPath = "Segmentation Explorer > Open Dataset from Table..." )
+@Plugin(type = Command.class, menuPath = "Plugins > Segmentation Annotator > Open Dataset from Table..." )
 public class OpenDatasetFromTableCommand implements Command
 {
 	/**
@@ -23,8 +24,7 @@ public class OpenDatasetFromTableCommand implements Command
 	{
 		String rootDirectory = segmentsTableFile.getParent();
 		String relativeTablePath = segmentsTableFile.getName();
-		SegmentsDatasetOpener datasetOpener = new SegmentsDatasetOpener( rootDirectory, relativeTablePath );
-		datasetOpener.run();
+		new SegmentationAnnotator( rootDirectory, relativeTablePath ).run();
 	}
 
 	public static void main( String[] args )
