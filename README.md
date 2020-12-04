@@ -27,5 +27,14 @@ Thus, please download a dedicated Fiji for this plugin.
 
 ## Run
 
-...
+- `[ Plugins > Segmentation Annotator > Open Dataset from Table... ]`
+
+BigDataViewer and a table should appear:
+
+![image](https://user-images.githubusercontent.com/2157566/101176937-7ba63480-3647-11eb-9952-543e153a99e5.png)
+
+## Use
+
+- Mouse: `Right click`: Shows a context menu through with most functionality can be accessed.
+- Mouse: `Ctrl + Left-Click`: Selects/Deselects the image segment at the location of the mouse pointer.
 
