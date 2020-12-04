@@ -34,12 +34,13 @@ import de.embl.cba.tables.imagesegment.ImageSegment;
 import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import net.imglib2.Volatile;
 import net.imglib2.converter.Converter;
+import net.imglib2.display.ColorConverter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 
 import java.util.Map;
 
-public class SegmentsConverter< T extends ImageSegment > implements Converter< RealType, ARGBType >, TimePointListener
+public class SegmentsConverter< T extends ImageSegment > implements Converter< RealType, ARGBType >, TimePointListener, ColorConverter
 {
 	private final Map< LabelFrameAndImage, T > labelFrameAndImageToSegment;
 	private final String imageId;
@@ -47,6 +48,7 @@ public class SegmentsConverter< T extends ImageSegment > implements Converter< R
 	private ARGBType singleColor;
 
 	private int frame;
+	private double max = 300;
 
 	public SegmentsConverter(
 			Map< LabelFrameAndImage, T > labelFrameAndImageToSegment,
@@ -100,6 +102,8 @@ public class SegmentsConverter< T extends ImageSegment > implements Converter< R
 			if( alpha < 255 )
 				color.mul( alpha / 255.0 );
 		}
+
+		color.mul( 100 / max ); // changes the intensity
 	}
 
 	public void timePointChanged( int timePointIndex )
@@ -107,8 +111,51 @@ public class SegmentsConverter< T extends ImageSegment > implements Converter< R
 		this.frame = timePointIndex;
 	}
 
+	// TODO: could one use the setColor function?
 	public void setSingleColor( ARGBType argbType )
 	{
 		singleColor = argbType;
+	}
+
+	@Override
+	public ARGBType getColor()
+	{
+		return null;
+	}
+
+	@Override
+	public void setColor( ARGBType c )
+	{
+
+	}
+
+	@Override
+	public boolean supportsColor()
+	{
+		return false;
+	}
+
+	@Override
+	public double getMin()
+	{
+		return 0;
+	}
+
+	@Override
+	public double getMax()
+	{
+		return max;
+	}
+
+	@Override
+	public void setMin( double min )
+	{
+
+	}
+
+	@Override
+	public void setMax( double max )
+	{
+		this.max = max;
 	}
 }

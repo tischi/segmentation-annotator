@@ -34,7 +34,6 @@ public class SourceAndConverterOpener
 		List< ConverterSetup > converterSetups = new ArrayList<>();
 		List< SourceAndConverter< ? > > sourceAndConverters = new ArrayList<>();
 		BigDataViewer.initSetups( spimData, converterSetups, sourceAndConverters );
-
 		HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata = new HashMap<>();
 
 		sourceAndConverters.forEach( source ->

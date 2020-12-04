@@ -49,6 +49,7 @@ import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.view.TableRowsTableView;
+import ij.IJ;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
 import net.imglib2.converter.Converter;
@@ -84,7 +85,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private static String selectTrigger = "ctrl button1";
 	private static final String selectNoneTrigger = "ctrl shift N";
-	private static final String incrementCategoricalLutRandomSeedTrigger = "ctrl L";
+	private static final String shuffleRandomColorTrigger = "ctrl L";
 	private static String labelMaskAsBinaryMaskTrigger = "ctrl M";
 	private static String labelMaskAsBoundaryTrigger = "ctrl B";
 	private static String iterateSelectionModeTrigger = "ctrl S";
@@ -194,7 +195,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-		SourceAndConverter sourceAndConverter = getSourceAndConverter( source, segmentsConverter );
+		SourceAndConverter sourceAndConverter = replaceConverter( source, segmentsConverter );
 
 		return sourceAndConverter;
 	}
@@ -203,18 +204,17 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		LabelsConverter labelsConverter = new LabelsConverter();
 
-		SourceAndConverter sourceAndConverter = getSourceAndConverter( source, labelsConverter );
+		SourceAndConverter sourceAndConverter = replaceConverter( source, labelsConverter );
 
 		return sourceAndConverter;
 	}
 
-	private SourceAndConverter getSourceAndConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
+	public static < R extends NumericType< R > & RealType< R > > SourceAndConverter< R > replaceConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
 	{
 		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
 		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
 		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
 		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
-
 		return sourceAndConverter;
 	}
 
@@ -328,18 +328,20 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdvHandle.getBdvHandle().getTriggerbindings(), name + "-bdv-select-handler" );
 
+		// TODO: move the Behaviours into the PopupMenus
 		installSelectionBehaviour();
 		installUndoSelectionBehaviour();
 		installSelectionColoringModeBehaviour();
 		installRandomColorShufflingBehaviour();
-		installShowLabelMaskAsBinaryMaskBehaviour(); // TODO: make popup
-		// installShowLabelMaskAsBoundaryBehaviour();
 
 		addUndoSelectionPopupMenu();
 		addStartNewAnnotationPopupMenu();
 		addContinueAnnotationPopupMenu();
 		addSelectionColoringModePopupMenu();
 		addShowLabelMaskAsBoundaryPopupMenu();
+		addReportIssuePopupMenu();
+		addMoveToPopupMenu();
+		addShuffleRandomColorsPopupMenu();
 		addAnimationSettingsPopupMenu();
 	}
 
@@ -395,6 +397,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		final String actionName = "Select None" + BdvUtils.getShortCutString( selectNoneTrigger );
 		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
+
 		BdvPopupMenus.addAction(
 				bdvHandle,
 				menuNames,
@@ -438,6 +441,59 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 			);
 	}
 
+	private void addReportIssuePopupMenu()
+	{
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				"Report Issue",
+				( x, y ) -> { reportIssueDialog(); }
+		);
+	}
+
+	private void addMoveToPopupMenu()
+	{
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				"Move to Location",
+				( x, y ) -> { moveToDialog(); }
+		);
+	}
+
+	private void moveToDialog()
+	{
+		final GenericDialog gd = new GenericDialog( "Move to location" );
+		gd.addStringField( "Location (x,y,z,t)", "", 50 );
+
+		gd.showDialog();
+		if ( gd.wasCanceled() ) return;
+
+		String location = gd.getNextString();
+
+		if ( location.contains( "(" ))
+			location = location.replace( "(", "" );
+
+		if ( location.contains( ")" ))
+			location = location.replace( ")", "" );
+
+		String[] split = location.split( "," );
+		double[] xyz = Arrays.stream( split ).limit( 3 ).mapToDouble( Double::parseDouble ).toArray();
+		BdvUtils.moveToPosition( bdvHandle, xyz, Integer.parseInt( split[ 3 ]), segmentFocusAnimationDurationMillis );
+
+	}
+
+	private void addShuffleRandomColorsPopupMenu()
+	{
+		final ArrayList< String > menuNames = new ArrayList<>();
+		menuNames.add( getSegmentsMenuName() ); // TODO: populate with the different label mask groups
+
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				menuNames,
+				"Shuffle Random Label Colors",
+				( x, y ) -> { shuffleRandomColors(); }
+		);
+	}
+
 	@NotNull
 	private String getSegmentsMenuName()
 	{
@@ -458,7 +514,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> shuffleRandomColors() ).start(),
 					name + "-change-color-random-seed",
-						incrementCategoricalLutRandomSeedTrigger );
+				shuffleRandomColorTrigger );
 	}
 
 	private void installShowLabelMaskAsBinaryMaskBehaviour()
@@ -526,14 +582,22 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		BdvUtils.repaint( bdvHandle );
 	}
 
-
-	public void setLabelSourceSingleColor( ARGBType labelSourceSingleColor )
+	private synchronized void reportIssueDialog()
 	{
-		// TODO: loop through all label sources
-//		this.labelSourceSingleColor = labelSourceSingleColor;
-//		labelsSourceConverter.setSingleColor( labelSourceSingleColor );
-//		isLabelMaskShownAsBinaryMask = true;
-//		BdvUtils.repaint( bdvHandle );
+		final RealPoint location = new RealPoint( 3 );
+		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( location );
+
+		GenericDialog gd = new GenericDialog( "Report issue" );
+		gd.addTextAreas( "", null, 5, 60 );
+
+		gd.showDialog();
+		if ( gd.wasCanceled() ) return;
+
+		IJ.log( "### Issue");
+		IJ.log( "Location (x,y,z,t):" );
+		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
+		IJ.log( "Issue:" );
+		IJ.log( gd.getNextText() );
 	}
 
 	private void installUndoSelectionBehaviour( )
@@ -543,7 +607,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 				name + "-select-none", selectNoneTrigger );
 	}
 
-	public synchronized void selectNone()
+	private synchronized void selectNone()
 	{
 		if ( ! isLabelSourceActive() ) return;
 
