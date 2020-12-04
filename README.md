@@ -20,7 +20,7 @@ Thus, please download a dedicated Fiji for this plugin.
       - Name: `SegmentationAnnotator` 
       - URL: `https://sites.imagej.net/SegmentationAnnotator`
       - It should look like this: 
-      - <img width="350" alt="image" src="https://user-images.githubusercontent.com/2157566/101176333-9e841900-3646-11eb-8673-a821e9129627.png">
+      - <img width="500" alt="image" src="https://user-images.githubusercontent.com/2157566/101176333-9e841900-3646-11eb-8673-a821e9129627.png">
    - [ Close ]
 1. Restart Fiji
 
