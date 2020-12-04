@@ -48,6 +48,7 @@ import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
+import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.view.TableRowsTableView;
 import ij.IJ;
 import ij.gui.GenericDialog;
@@ -68,6 +69,7 @@ import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
+import javax.swing.text.TableView;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -103,14 +105,14 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private SynchronizedViewerState state;
 	private TableRowsTableView< ? > tableView;
 
-	public SegmentedImagesView( final List< T > tableRowImageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
+	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();
 		this.rawSourceToMetadata = sourceToMetadata;
 
-		this.name = tableRowImageSegments.toString();
-		initSegments( tableRowImageSegments );
+		this.name = imageSegments.toString();
+		initSegments( imageSegments );
 	}
 
 	public void showImages( boolean is2D, int numTimePoints )
@@ -590,6 +592,10 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		GenericDialog gd = new GenericDialog( "Report issue" );
 		gd.addTextAreas( "", null, 5, 60 );
 
+		T segment = getSegmentAtMouseCoordinates();
+		if ( segment != null && segment instanceof TableRow )
+			gd.addCheckbox( "Add issue to image segment in table", true );
+
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return;
 
@@ -597,7 +603,24 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		IJ.log( "Location (x,y,z,t):" );
 		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
 		IJ.log( "Issue:" );
-		IJ.log( gd.getNextText() );
+		String issue = gd.getNextText();
+		IJ.log( issue );
+
+		// TODO: below is a mess! Think of better separation of concerns
+		//  Maybe an image segment needs to have option to have more fields?
+		//  Such as Annotation and Issue? Or maybe a featureMap?!
+		if ( segment != null && segment instanceof TableRow && gd.getNextBoolean() )
+		{
+			if ( tableView != null )
+			{
+				if ( ! tableView.getColumnNames().contains( "Issue" ) )
+				{
+					tableView.addColumn( "Issue", "None" );
+				}
+			}
+
+			((TableRow) segment).setCell( "Issue", issue );
+		}
 	}
 
 	private void installUndoSelectionBehaviour( )
