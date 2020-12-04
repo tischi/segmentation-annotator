@@ -27,7 +27,9 @@ Thus, please download a dedicated Fiji for this plugin.
 
 ## Run
 
-- `[ Plugins > Segmentation Annotator > Open Dataset from Table... ]`
+- (Optional) Download a demo data set:
+   - [Two segmented images (cells and golgi)](https://oc.embl.de/index.php/s/L4Kv5YgKgiMCFUe)
+- `[ Plugins > Segmentation > Annotator > Open Dataset from Table... ]`
 
 BigDataViewer and a table should appear:
 
