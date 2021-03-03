@@ -32,13 +32,15 @@ import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import net.imglib2.Volatile;
 import net.imglib2.converter.Converter;
+import net.imglib2.display.ColorConverter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 
-public class LabelsConverter implements Converter< RealType, ARGBType >
+public class LabelsConverter implements Converter< RealType, ARGBType >, ColorConverter
 {
 	private final LazyCategoryColoringModel< Double > coloringModel;
 	private ARGBType singleColor;
+	private double max = 300;
 
 	public LabelsConverter()
 	{
@@ -72,6 +74,8 @@ public class LabelsConverter implements Converter< RealType, ARGBType >
 		}
 
 		coloringModel.convert( realDouble, color );
+
+		color.mul( 100 / max ); // changes the intensity
 	}
 
 	public LazyCategoryColoringModel< Double > getColoringModel()
@@ -82,5 +86,47 @@ public class LabelsConverter implements Converter< RealType, ARGBType >
 	public void setSingleColor( ARGBType argbType )
 	{
 		singleColor = argbType;
+	}
+
+	@Override
+	public ARGBType getColor()
+	{
+		return null;
+	}
+
+	@Override
+	public void setColor( ARGBType c )
+	{
+
+	}
+
+	@Override
+	public boolean supportsColor()
+	{
+		return false;
+	}
+
+	@Override
+	public double getMin()
+	{
+		return 0;
+	}
+
+	@Override
+	public double getMax()
+	{
+		return max;
+	}
+
+	@Override
+	public void setMin( double min )
+	{
+
+	}
+
+	@Override
+	public void setMax( double max )
+	{
+		this.max = max;
 	}
 }

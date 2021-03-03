@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>29.2.1</version>
+		<version>30.0.0</version>
 	</parent>
 
 	<groupId>de.embl.cba</groupId>
@@ -76,13 +76,21 @@
 		<scijava.app.directory>/Users/tischer/Desktop/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
 		<enforcer.skip>true</enforcer.skip>
 
-		<!-- Below versions are very "new" and not entirely compatible with the current Fiji -->
-		<bigdataviewer-bioformats.version>0.2.11-SNAPSHOT</bigdataviewer-bioformats.version>
-		<bigdataviewer-playground.version>0.2.7-SNAPSHOT</bigdataviewer-playground.version>
-		<imglib2-cache.version>1.0.0-beta-15</imglib2-cache.version>
-		<imagej-utils.version>0.5.10-SNAPSHOT</imagej-utils.version>
-		<bigdataviewer-core.version>10.0.2</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-23</bigdataviewer-vistools.version>
+        <!-- Java 8	Update Site	-->
+        <imglib2.version>5.11.1</imglib2.version>
+        <imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+        <bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
+        <bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+
+        <!-- BIOP -->
+        <bigdataviewer-bioformats.version>0.2.15</bigdataviewer-bioformats.version>
+		<bigdataviewer-playground.version>0.2.11</bigdataviewer-playground.version>
+
+        <!-- EMBL CBA -->
+        <imaris-writer.version>0.2.3</imaris-writer.version>
+        <imagej-utils.version>0.6.0</imagej-utils.version>
+        <imagej-cluster.version>0.6.5</imagej-cluster.version>
+
 	</properties>
 
 	<repositories>

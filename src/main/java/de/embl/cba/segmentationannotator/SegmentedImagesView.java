@@ -33,8 +33,8 @@ import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
-import bdv.viewer.*;
 import bdv.viewer.DisplayMode;
+import bdv.viewer.*;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
@@ -66,10 +66,9 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
-import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterUtils;
+import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
-import javax.swing.text.TableView;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -267,7 +266,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		// SourceAndConverterServices.getSourceAndConverterDisplayService().show( source );
 		bdvHandle.getViewerPanel().state().addSource( source );
 		bdvHandle.getViewerPanel().state().setSourceActive( source, true );
-		ConverterSetup converterSetup = SourceAndConverterUtils.createConverterSetup( source );
+		ConverterSetup converterSetup = SourceAndConverterHelper.createConverterSetup( source );
 		bdvHandle.getConverterSetups().put( source, converterSetup );
 	}
 
@@ -314,7 +313,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		new ViewerTransformChanger(
 				bdvHandle,
-				sc.fiji.bdvpg.bdv.BdvUtils.getViewerTransformWithNewCenter( bdvHandle, position ),
+				sc.fiji.bdvpg.bdv.BdvHandleHelper.getViewerTransformWithNewCenter( bdvHandle, position ),
 				false,
 				segmentFocusAnimationDurationMillis ).run();
 
@@ -716,7 +715,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		final int currentTimepoint = bdvHandle.getViewerPanel().state().getCurrentTimepoint();
 
 		Set< SourceAndConverter< ? > > sourcesAtMousePosition = sources.stream()
-				.filter( source -> SourceAndConverterUtils.isPositionWithinSourceInterval( source, globalMouseCoordinates, currentTimepoint, is2D ) )
+				.filter( source -> SourceAndConverterHelper.isPositionWithinSourceInterval( source, globalMouseCoordinates, currentTimepoint, is2D ) )
 				.collect( Collectors.toSet() );
 
 		Set< SourceAndConverter< R > > labelSources = getLabelSources();

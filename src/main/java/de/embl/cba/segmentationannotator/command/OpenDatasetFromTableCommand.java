@@ -9,7 +9,7 @@ import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
-@Plugin(type = Command.class, menuPath = "Plugins > Segmentation Annotator > Open Dataset from Table..." )
+@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > Open Dataset from Table..." )
 public class OpenDatasetFromTableCommand implements Command
 {
 	/**
