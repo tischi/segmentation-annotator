@@ -33,7 +33,7 @@ Thus, please download a dedicated Fiji for this plugin.
 
 BigDataViewer and a table should appear:
 
-![image](https://user-images.githubusercontent.com/2157566/101176937-7ba63480-3647-11eb-9952-543e153a99e5.png)
+<img src="https://user-images.githubusercontent.com/2157566/101176937-7ba63480-3647-11eb-9952-543e153a99e5.png" width="700">
 
 ## Use
 
