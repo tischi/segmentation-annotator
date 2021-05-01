@@ -40,3 +40,7 @@ BigDataViewer and a table should appear:
 - Mouse: `Right click`: Shows a context menu through with most functionality can be accessed.
 - Mouse: `Ctrl + Left-Click`: Selects/Deselects the image segment at the location of the mouse pointer.
 
+## Annotate
+
+<img src="./doc/annotate.png" width="700">
+
