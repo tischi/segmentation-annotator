@@ -15,6 +15,7 @@ public class RunOpenIntensityAndLabelsImagePlusCommand
 		String root = "/Users/tischer/Documents/segmentations-explorer/";
 		command.intensityImagePlus = IJ.openImage( root + "src/test/resources/intensity_image_3d.zip");
 		command.labelImagePlus = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
+		command.labelImagePlus.show();
 		command.run();
 	}
 }

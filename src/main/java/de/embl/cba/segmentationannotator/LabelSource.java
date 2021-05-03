@@ -3,6 +3,7 @@ package de.embl.cba.segmentationannotator;
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
+import bdv.viewer.SourceAndConverter;
 import de.embl.cba.lazyalgorithm.RandomAccessibleIntervalFilter;
 import de.embl.cba.lazyalgorithm.converter.NeighborhoodNonZeroBoundariesConverter2;
 import de.embl.cba.lazyalgorithm.view.NeighborhoodViews;
@@ -10,7 +11,9 @@ import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.neighborhood.HyperSphereShape;
+import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
@@ -38,6 +41,15 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 	{
 		this.source = source;
 		this.interpolators = new DefaultInterpolators();
+	}
+
+	public static < R extends NumericType< R > & RealType< R > > SourceAndConverter< R > asLabelSourceAndConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
+	{
+		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
+		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
+		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
+		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
+		return sourceAndConverter;
 	}
 
 	public void showAsBoundary( boolean showAsBoundaries, int boundaryWidth )

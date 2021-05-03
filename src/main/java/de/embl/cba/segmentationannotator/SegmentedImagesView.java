@@ -194,7 +194,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-		SourceAndConverter sourceAndConverter = de.embl.cba.segmentationannotator.SourceAndConverterHelper.replaceConverter( source, segmentsConverter );
+		SourceAndConverter sourceAndConverter = LabelSource.asLabelSourceAndConverter( source, segmentsConverter );
 
 		return sourceAndConverter;
 	}
@@ -203,7 +203,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		LabelConverter labelConverter = new LabelConverter();
 
-		SourceAndConverter sourceAndConverter = de.embl.cba.segmentationannotator.SourceAndConverterHelper.replaceConverter( source, labelConverter );
+		SourceAndConverter sourceAndConverter = LabelSource.asLabelSourceAndConverter( source, labelConverter );
 
 		return sourceAndConverter;
 	}
