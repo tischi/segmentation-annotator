@@ -8,7 +8,7 @@ Fiji plugin for exploration and annotation of segmented images.
 1. Start Fiji and add the Update Site `SegmentationAnnotator` like this:
    - [ Help > Update.. ]
    - [ Manage update sites ]
-   - [X] `SegmentationAnnotator` 
+      - [X] `SegmentationAnnotator` 
    - [ Close ]
 1. Restart Fiji
 
