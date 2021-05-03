@@ -38,6 +38,8 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 
 		final BdvHandle bdvHandle = new MinimalBdvCreator( "", intensityImagePlus.getNSlices() == 1, Projector.SUM_PROJECTOR, true, intensityImagePlus.getNFrames() ).get();
 
+
+
 		final SourceAndConverterBdvDisplayService displayService = SourceAndConverterServices.getSourceAndConverterDisplayService();
 		displayService.show( bdvHandle, intensitySourceAndConverter );
 		displayService.show( bdvHandle, labelSourceAndConverter );
