@@ -6,6 +6,7 @@ import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.LabelSource;
 import de.embl.cba.segmentationannotator.SegmentedImagesView;
 import de.embl.cba.segmentationannotator.SourceMetadata;
+import de.embl.cba.segmentationannotator.Utils;
 import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.labels.LabelAnalyzer;
 import de.embl.cba.segmentationannotator.labels.SegmentFeatures;
@@ -15,6 +16,7 @@ import de.embl.cba.tables.imagesegment.SegmentProperty;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
+import de.embl.cba.tables.view.TableRowsTableView;
 import ij.ImagePlus;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import org.jetbrains.annotations.NotNull;
@@ -91,10 +93,15 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
 		// create image view
+		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
+		imagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
+		Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
 
-		final SegmentedImagesView< ?, ? > segmentedImagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
-		segmentedImagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
-
+		// create table view
+		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
+		tableView.setSelectionMode( TableRowsTableView.SelectionMode.FocusOnly );
+		tableView.showTableAndMenu( imagesView.getWindow() );
+		imagesView.setTableView( tableView );
 
 //		final BdvHandle bdvHandle = new MinimalBdvCreator( "", intensityImagePlus.getNSlices() == 1, Projector.SUM_PROJECTOR, true, intensityImagePlus.getNFrames() ).get();
 //		final SourceAndConverterBdvDisplayService displayService = SourceAndConverterServices.getSourceAndConverterDisplayService();
