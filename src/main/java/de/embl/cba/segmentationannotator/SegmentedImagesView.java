@@ -38,7 +38,7 @@ import bdv.viewer.*;
 import de.embl.cba.bdv.utils.BdvUtils;
 import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
-import de.embl.cba.segmentationannotator.converters.LabelsConverter;
+import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.converters.SegmentsConverter;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
@@ -53,11 +53,9 @@ import de.embl.cba.tables.view.TableRowsTableView;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
-import net.imglib2.converter.Converter;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import org.jetbrains.annotations.NotNull;
@@ -196,26 +194,17 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 		bdvHandle.getViewerPanel().addTimePointListener( segmentsConverter );
 
-		SourceAndConverter sourceAndConverter = replaceConverter( source, segmentsConverter );
+		SourceAndConverter sourceAndConverter = de.embl.cba.segmentationannotator.SourceAndConverterHelper.replaceConverter( source, segmentsConverter );
 
 		return sourceAndConverter;
 	}
 
 	private SourceAndConverter< R > asLabelSource( SourceAndConverter< R > source )
 	{
-		LabelsConverter labelsConverter = new LabelsConverter();
+		LabelConverter labelConverter = new LabelConverter();
 
-		SourceAndConverter sourceAndConverter = replaceConverter( source, labelsConverter );
+		SourceAndConverter sourceAndConverter = de.embl.cba.segmentationannotator.SourceAndConverterHelper.replaceConverter( source, labelConverter );
 
-		return sourceAndConverter;
-	}
-
-	public static < R extends NumericType< R > & RealType< R > > SourceAndConverter< R > replaceConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
-	{
-		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
-		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
-		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
-		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
 		return sourceAndConverter;
 	}
 

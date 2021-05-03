@@ -36,13 +36,13 @@ import net.imglib2.display.ColorConverter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 
-public class LabelsConverter implements Converter< RealType, ARGBType >, ColorConverter
+public class LabelConverter implements Converter< RealType, ARGBType >, ColorConverter
 {
 	private final LazyCategoryColoringModel< Double > coloringModel;
 	private ARGBType singleColor;
 	private double max = 300;
 
-	public LabelsConverter()
+	public LabelConverter()
 	{
 		this.coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
 	}
