@@ -79,8 +79,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private final SelectionColoringModel< T > selectionColoringModel;
 	private final SelectionModel< T > selectionModel;
-	private final HashMap< SourceAndConverter< R >, SourceMetadata > rawSourceToMetadata;
-	private HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata;
+	private final Map< SourceAndConverter< R >, SourceMetadata > rawSourceToMetadata;
+	private Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata;
 
 	private static String selectTrigger = "ctrl button1";
 	private static final String selectNoneTrigger = "ctrl shift N";
@@ -102,7 +102,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private SynchronizedViewerState state;
 	private TableRowsTableView< ? > tableView;
 
-	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final HashMap< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
+	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();

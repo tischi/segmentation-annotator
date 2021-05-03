@@ -5,6 +5,7 @@ import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.LabelSource;
 import de.embl.cba.segmentationannotator.SegmentedImagesView;
+import de.embl.cba.segmentationannotator.SourceMetadata;
 import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.labels.LabelAnalyzer;
 import de.embl.cba.segmentationannotator.labels.SegmentFeatures;
@@ -54,13 +55,32 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 	public void run()
 	{
 		// create images
-		final SourceAndConverter intensitySourceAndConverter = getIntensitySourceAndConverter();
-		final SourceAndConverter labelSourceAndConverter = getLabelSourceAndConverter( );
+		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
+		final SourceAndConverter labelSourceAndConverter = new SourceAndConverterFromSpimDataCreator( getter.apply( labelImagePlus ) ).getSetupIdToSourceAndConverter().get( 0 );
+		final SourceAndConverter intensitySourceAndConverter = new SourceAndConverterFromSpimDataCreator( getter.apply( intensityImagePlus ) ).getSetupIdToSourceAndConverter().get( 0 );
+
+		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
+		final SourceMetadata labelSourceMetadata = new SourceMetadata();
+		labelSourceMetadata.isLabelSource = true;
+		labelSourceMetadata.isPrimaryLabelSource = true;
+		labelSourceMetadata.imageId = labelSourceAndConverter.getSpimSource().getName();
+		labelSourceMetadata.channelName = "channel 0";
+		labelSourceMetadata.groupId = "group 0";
+		sources.put( labelSourceAndConverter, labelSourceMetadata );
+
+		final SourceMetadata intensitySourceMetadata = new SourceMetadata();
+		intensitySourceMetadata.isLabelSource = false;
+		intensitySourceMetadata.isPrimaryLabelSource = false;
+		intensitySourceMetadata.imageId = intensitySourceAndConverter.getSpimSource().getName();
+		intensitySourceMetadata.channelName = "channel 0";
+		intensitySourceMetadata.groupId = "group 0";
+		sources.put( labelSourceAndConverter, intensitySourceMetadata );
 
 		// create labels and features
 		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImagePlus.getImageStack(), intensityImagePlus.getImageStack(), intensityImagePlus.getCalibration() );
 		Map< String, List< String > > columns = getColumns( labelToFeatures, intensitySourceAndConverter.getSpimSource().getName() );
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( columns );
+
 
 		// create table
 		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( columns, segmentPropertyToColumnName, true );
@@ -71,7 +91,10 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
 		// create image view
-		new SegmentedImagesView<>( tableRowImageSegments, selectionColoringModel,  )
+
+		final SegmentedImagesView< ?, ? > segmentedImagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
+		segmentedImagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
+
 
 //		final BdvHandle bdvHandle = new MinimalBdvCreator( "", intensityImagePlus.getNSlices() == 1, Projector.SUM_PROJECTOR, true, intensityImagePlus.getNFrames() ).get();
 //		final SourceAndConverterBdvDisplayService displayService = SourceAndConverterServices.getSourceAndConverterDisplayService();
