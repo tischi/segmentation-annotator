@@ -1,44 +1,54 @@
 package de.embl.cba.segmentationannotator.labels;
 
 import ij.ImageStack;
+import ij.measure.Calibration;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeSet;
 
 public class LabelAnalyzer
 {
-
-	public final static Map< Integer, VolumeAndAnchor > analyzeLabels( ImageStack image, double[] voxelSize )
+	public final static Map< Integer, SegmentFeatures > analyzeLabels( ImageStack labels, ImageStack intensities, Calibration calibration )
 	{
-		int sizeX = image.getWidth();
-		int sizeY = image.getHeight();
-		int sizeZ = image.getSize();
+		int sizeX = labels.getWidth();
+		int sizeY = labels.getHeight();
+		int sizeZ = labels.getSize();
 
-		final HashMap< Integer, VolumeAndAnchor > indexToVolumeAndAnchor = new HashMap<>();
+		final HashMap< Integer, SegmentFeatures > indexToFeatures = new HashMap<>();
 
-		// iterate on image pixels
 		for (int z = 0; z < sizeZ; z++)
 		{
 			for (int y = 0; y < sizeY; y++)
 			{
 				for (int x = 0; x < sizeX; x++)
 				{
-					final int index = ( int ) image.getVoxel( x, y, z );
+					final int index = ( int ) labels.getVoxel( x, y, z );
 
 					if ( index == 0 ) continue;
 
-					if ( ! indexToVolumeAndAnchor.containsKey( index ) )
+					if ( ! indexToFeatures.containsKey( index ) )
 					{
-						final VolumeAndAnchor volumeAndAnchor = new VolumeAndAnchor();
-						indexToVolumeAndAnchor.put( index, volumeAndAnchor );
-						volumeAndAnchor.anchor = new double[]{ x * voxelSize[ 0 ], y * voxelSize[ 1 ], z * voxelSize[ 2 ] };
+						final SegmentFeatures segmentFeatures = new SegmentFeatures();
+						indexToFeatures.put( index, segmentFeatures );
 					}
-					indexToVolumeAndAnchor.get( index ).numPixels++;
+					final SegmentFeatures segmentFeatures = indexToFeatures.get( index );
+					segmentFeatures.numPixels++;
+					segmentFeatures.anchorX += x;
+					segmentFeatures.anchorY += y;
+					segmentFeatures.anchorZ += z;
+					segmentFeatures.meanIntensity += intensities.getVoxel( x, y, z );
 				}
 			}
 		}
-		return indexToVolumeAndAnchor;
+
+		for ( SegmentFeatures features : indexToFeatures.values() )
+		{
+			features.anchorX *= calibration.pixelWidth / features.numPixels ;
+			features.anchorY *= calibration.pixelHeight / features.numPixels;
+			features.anchorZ *= calibration.pixelDepth / features.numPixels;
+			features.meanIntensity /= features.numPixels;
+		}
+
+		return indexToFeatures;
 	}
 }
