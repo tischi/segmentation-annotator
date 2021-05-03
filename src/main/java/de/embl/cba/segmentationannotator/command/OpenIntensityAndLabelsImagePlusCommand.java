@@ -12,9 +12,12 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.fiji.bdvpg.bdv.MinimalBdvCreator;
+import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.bdv.projector.Projector;
 import sc.fiji.bdvpg.scijava.services.SourceAndConverterBdvDisplayService;
 import sc.fiji.bdvpg.services.SourceAndConverterServices;
+import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAdjuster;
+import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
 import sc.fiji.bdvpg.sourceandconverter.importer.SourceAndConverterFromSpimDataCreator;
 import spimdata.imageplus.SpimDataFromImagePlusGetter;
 
@@ -38,7 +41,8 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		final SourceAndConverterBdvDisplayService displayService = SourceAndConverterServices.getSourceAndConverterDisplayService();
 		displayService.show( bdvHandle, intensitySourceAndConverter );
 		displayService.show( bdvHandle, labelSourceAndConverter );
-		displayService.show( bdvHandle, labelSourceAndConverter );
+		new BrightnessAutoAdjuster( intensitySourceAndConverter,0 ).run();
+		new ViewerTransformAdjuster( bdvHandle, intensitySourceAndConverter ).run();
 	}
 
 	private SourceAndConverter getIntensitySourceAndConverter()

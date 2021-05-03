@@ -46,19 +46,10 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 		this.boundaryWidth = boundaryWidth;
 	}
 
-//	@Override
-//	public boolean doBoundingBoxCulling()
-//	{
-////		System.out.println( "Source " + source.getName() + " culling: " + source.doBoundingBoxCulling() );
-//		return source.doBoundingBoxCulling();
-//	}
-
-
 	@Override
 	public synchronized void getSourceTransform( final int t, final int level, final AffineTransform3D transform )
 	{
 		source.getSourceTransform( t, level, transform );
-//		System.out.println( "Source " + source.getName() + " transform: " + transform.toString() );
 	}
 
 	@Override
@@ -70,36 +61,35 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 	@Override
 	public RandomAccessibleInterval< T > getSource( final int t, final int level )
 	{
-		RandomAccessibleInterval< T > source = this.source.getSource( t, level );
+		RandomAccessibleInterval< T > rai = source.getSource( t, level );
 
 		if ( showAsBoundaries )
 		{
-			NeighborhoodNonZeroBoundariesConverter2< T > boundariesConverter = new NeighborhoodNonZeroBoundariesConverter2< T >( source );
+			NeighborhoodNonZeroBoundariesConverter2< T > boundariesConverter = new NeighborhoodNonZeroBoundariesConverter2< T >( rai );
 			RandomAccessibleInterval boundaries = NeighborhoodViews.neighborhoodConvertedView(
-					source,
+					rai,
 					boundariesConverter,
 					new HyperSphereShape( boundaryWidth ) );
 			return boundaries;
 		}
 		else
 		{
-			return source;
+			return rai;
 		}
 	}
 
 	@Override
 	public RealRandomAccessible< T > getInterpolatedSource( final int t, final int level, final Interpolation method )
 	{
-//		System.out.println("Access source: " + source.getName() + " of type " + getType().toString() );
 		if ( showAsBoundaries  )
 		{
 			RandomAccessibleInterval< T > rai = getSource( t, level );
-			RealRandomAccessible< T > interpolate = Views.interpolate( Views.extendZero( rai ), interpolators.get( method ) );
+			RealRandomAccessible< T > interpolate = Views.interpolate( Views.extendZero( rai ), interpolators.get( Interpolation.NEARESTNEIGHBOR ) );
 			return interpolate;
 		}
 		else
 		{
-			return source.getInterpolatedSource( t, level, method );
+			return source.getInterpolatedSource( t, level, Interpolation.NEARESTNEIGHBOR );
 		}
 	}
 
