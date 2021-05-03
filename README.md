@@ -15,6 +15,12 @@ Fiji plugin for exploration and annotation of segmented images.
 
 ## Run
 
+### Open label and intensity images
+
+- `[ Plugins > Segmentation > Annotator > Open Intensity and Label Mask Images... ]`
+
+### Open data set from table
+
 - (Optional) Download a demo data set:
    - [Two segmented images (cells and golgi)](https://oc.embl.de/index.php/s/L4Kv5YgKgiMCFUe)
 - `[ Plugins > Segmentation > Annotator > Open Dataset from Table... ]`
