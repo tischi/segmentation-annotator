@@ -18,7 +18,6 @@ public class Utils
 		return normalize.toString();
 	}
 
-	@NotNull
 	public static String removeFilenameExtension( String imagePath )
 	{
 		return FilenameUtils.removeExtension( new File( imagePath ).getName() ).replace( ".ome", "" );

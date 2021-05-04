@@ -2,8 +2,6 @@ package de.embl.cba.segmentationannotator.open;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.Logger;
-import de.embl.cba.segmentationannotator.ImagePathsFromTableRowsExtractor;
-import de.embl.cba.segmentationannotator.SegmentsCreator;
 import de.embl.cba.segmentationannotator.SourceMetadata;
 import de.embl.cba.segmentationannotator.Utils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
@@ -40,9 +38,9 @@ public class SegmentsDatasetOpener implements Runnable
 	{
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
 
-		SegmentsCreator segmentsCreator = new SegmentsCreator( tablePath );
-		segments = segmentsCreator.createSegments();
-		String labelImageColumnName = segmentsCreator.getLabelImageColumnName();
+		SegmentsTableOpener segmentsTableOpener = new SegmentsTableOpener( tablePath );
+		segments = segmentsTableOpener.createSegments();
+		String labelImageColumnName = segmentsTableOpener.getLabelImageColumnName();
 
 		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, "image_path_" );
 		Map< String, Set< String > > columnNameToImagePaths = imagePathsExtractor.getColumnNameToImagePaths();

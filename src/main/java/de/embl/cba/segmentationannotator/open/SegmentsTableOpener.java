@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.open;
 
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
@@ -41,12 +41,12 @@ import java.util.Map;
 
 import static de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog.NO_COLUMN_SELECTED;
 
-public class SegmentsCreator
+public class SegmentsTableOpener
 {
 	private final String tablePath;
 	private String labelImageColumnName;
 
-	public SegmentsCreator( String tablePath )
+	public SegmentsTableOpener( String tablePath )
 	{
 		this.tablePath = tablePath;
 	}

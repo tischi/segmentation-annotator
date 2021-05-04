@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.open;
 
 import de.embl.cba.tables.tablerow.TableRow;
 
