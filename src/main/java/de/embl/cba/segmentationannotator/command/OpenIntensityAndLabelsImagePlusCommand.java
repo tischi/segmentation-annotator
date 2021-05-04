@@ -9,6 +9,7 @@ import de.embl.cba.segmentationannotator.TableView;
 import de.embl.cba.segmentationannotator.converter.LabelConverter;
 import de.embl.cba.segmentationannotator.label.LabelAnalyzer;
 import de.embl.cba.segmentationannotator.label.SegmentFeatures;
+import de.embl.cba.segmentationannotator.volume.SegmentsVolumeView;
 import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.imagesegment.SegmentProperty;
@@ -72,10 +73,16 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
 		imagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
 
-		// create table view
+		// table view
 		TableView< TableRowImageSegment > tableView = new TableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
 		tableView.showTableAndMenu( imagesView.getWindow() );
 		imagesView.setTableView( tableView );
+
+		// volume view
+		final SegmentsVolumeView< TableRowImageSegment > volumeView = new SegmentsVolumeView<>( selectionModel, selectionColoringModel, sources.keySet() );
+		selectionModel.listeners().add( volumeView );
+		selectionColoringModel.listeners().add( volumeView );
+		imagesView.setVolumeView( volumeView );
 	}
 
 	public void addIntensitySource( Map< SourceAndConverter< ? >, SourceMetadata > sources )

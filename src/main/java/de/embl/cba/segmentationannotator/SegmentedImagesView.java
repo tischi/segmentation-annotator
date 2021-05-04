@@ -41,7 +41,9 @@ import de.embl.cba.segmentationannotator.bdv.SourcesAtMousePositionSupplier;
 import de.embl.cba.segmentationannotator.converter.LabelConverter;
 import de.embl.cba.segmentationannotator.converter.SegmentsConverter;
 import de.embl.cba.segmentationannotator.dialog.LabelMaskDisplayDialog;
+import de.embl.cba.segmentationannotator.dialog.VolumeViewConfigurationDialog;
 import de.embl.cba.segmentationannotator.label.LabelSource;
+import de.embl.cba.segmentationannotator.volume.SegmentsVolumeView;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
@@ -54,6 +56,7 @@ import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.IJ;
 import ij.gui.GenericDialog;
+import ij3d.Image3DUniverse;
 import net.imglib2.RealPoint;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
@@ -72,6 +75,7 @@ import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -102,6 +106,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private boolean is2D;
 	private SynchronizedViewerState state;
 	private TableView< TableRowImageSegment > tableView;
+	private SegmentsVolumeView< TableRowImageSegment > volumeView;
 	private SourceAndConverterService sacService;
 
 	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
@@ -111,6 +116,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		this.rawSourceToMetadata = sourceToMetadata;
 
 		this.name = imageSegments.toString();
+
 		initSegments( imageSegments );
 	}
 
@@ -125,10 +131,15 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		initSources();
 		showSources();
 
-		registerAsSelectionListener( this.selectionColoringModel.getSelectionModel() );
+		registerAsSelectionListener( this.selectionModel );
 		registerAsColoringListener( this.selectionColoringModel );
 
 		installBdvBehavioursAndPopupMenu();
+	}
+
+	public void setVolumeView( SegmentsVolumeView< TableRowImageSegment > volumeView )
+	{
+		this.volumeView = volumeView;
 	}
 
 	private void createNewBdv( int numTimePoints )
@@ -329,11 +340,12 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		actions.add( installUndoSegmentSelectionBehaviour() );
 		actions.add( installRandomColorShufflingBehaviour() );
 		actions.add( installSegmentSelectionBehaviour() );
+		actions.add( installConfigureSegmentsVolumeViewBehaviour() );
 		actions.add( installSelectionColoringModeBehaviour() );
 		actions.add( installStartNewAnnotationBehaviour() );
 		actions.add( installContinueAnnotationBehaviour() );
 		actions.add( installConfigureLabelMaskDisplayBehaviour() );
-		actions.add( addReportIssuePopupMenu() );
+		actions.add( installReportIssueBehaviour() );
 		//addMoveToPopupMenu();
 		//addAnimationSettingsPopupMenu();
 
@@ -349,8 +361,22 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		sacService.registerAction( actionName, sourceAndConverters -> {
 			selectNone();
 		} );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
+						new Thread( () -> selectNone() ).start(),
+				name + "-select-none", selectNoneTrigger );
+		return actionName;
+	}
 
-		installUndoSelectionBehaviour();
+	private String installConfigureSegmentsVolumeViewBehaviour()
+	{
+		final String actionName = "Configure Segments 3D View";
+		sacService.registerAction( actionName, sourceAndConverters -> {
+			if ( VolumeViewConfigurationDialog.showDialog() )
+			{
+				volumeView.showSegments( VolumeViewConfigurationDialog.isShowSelectedSegmentsIn3D() );
+			}
+		} );
+
 		return actionName;
 	}
 
@@ -446,7 +472,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		return actionName;
 	}
 
-	private String addReportIssuePopupMenu()
+	private String installReportIssueBehaviour()
 	{
 		final String actionName = "Report an Issue...";
 		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
@@ -610,13 +636,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			((TableRow) segment).setCell( "Issue", issue );
 		}
-	}
-
-	private void installUndoSelectionBehaviour( )
-	{
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-				new Thread( () -> selectNone() ).start(),
-				name + "-select-none", selectNoneTrigger );
 	}
 
 	private synchronized void selectNone()

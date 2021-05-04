@@ -76,6 +76,9 @@
 		<scijava.app.directory>/Users/tischer/Desktop/Fiji/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
 		<enforcer.skip>true</enforcer.skip>
 
+		<!-- 3D Viewer	-->
+		<j3dcore.version>1.6.0-scijava-2</j3dcore.version>
+
 		<!-- Java 8	Update Site	-->
 		<imglib2.version>5.11.1</imglib2.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
@@ -149,6 +152,12 @@
 			<artifactId>imglib2-cache</artifactId>
 			<version>${imglib2-cache.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>j3dcore</artifactId>
+			<version>${j3dcore.version}</version>
+		</dependency>
+
 	</dependencies>
 
 </project>
