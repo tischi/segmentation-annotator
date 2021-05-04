@@ -36,11 +36,11 @@ import bdv.util.BdvStackSource;
 import bdv.viewer.DisplayMode;
 import bdv.viewer.*;
 import de.embl.cba.bdv.utils.BdvUtils;
-import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
+import de.embl.cba.segmentationannotator.bdv.SourcesAtMousePositionSupplier;
 import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.converters.SegmentsConverter;
-import de.embl.cba.segmentationannotator.dialog.LabelMaskAsBoundaryDialog;
+import de.embl.cba.segmentationannotator.dialog.LabelMaskDisplayDialog;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
@@ -50,7 +50,7 @@ import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
-import de.embl.cba.tables.view.TableRowsTableView;
+import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
@@ -89,10 +89,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private static String selectTrigger = "ctrl button1";
 	private static final String selectNoneTrigger = "ctrl shift N";
 	private static final String shuffleRandomColorTrigger = "ctrl L";
-	private static String labelMaskAsBinaryMaskTrigger = "ctrl M";
-	private static String labelMaskAsBoundaryTrigger = "ctrl B";
-	private static String iterateSelectionModeTrigger = "ctrl S";
-	private static String viewIn3DTrigger = "ctrl shift button1";
 
 	private Behaviours behaviours;
 	private BdvHandle bdvHandle;
@@ -104,8 +100,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
 	private SynchronizedViewerState state;
-	// TODO: remove table view from this class!
-	private TableRowsTableView< ? > tableView;
+	private TableView< TableRowImageSegment > tableView;
 	private SourceAndConverterService sacService;
 
 	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
@@ -158,8 +153,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void initSources()
 	{
-		Logger.log("Initializing sources...");
-
 		sourceToMetadata = new HashMap<>(  );
 
 		rawSourceToMetadata.keySet().forEach( source ->
@@ -338,12 +331,12 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		actions.add( installSelectionColoringModeBehaviour() );
 		actions.add( installStartNewAnnotationBehaviour() );
 		actions.add( installContinueAnnotationBehaviour() );
-		actions.add( installShowLabelMaskAsBoundaryBehaviour() );
+		actions.add( installConfigureLabelMaskDisplayBehaviour() );
 		actions.add( addReportIssuePopupMenu() );
 		//addMoveToPopupMenu();
 		//addAnimationSettingsPopupMenu();
 
-		SourceAndConverterContextMenuClickBehaviour contextMenu = new SourceAndConverterContextMenuClickBehaviour( bdvHandle, () -> null, actions.toArray( new String[ 0 ] ) );
+		SourceAndConverterContextMenuClickBehaviour contextMenu = new SourceAndConverterContextMenuClickBehaviour( bdvHandle, new SourcesAtMousePositionSupplier( bdvHandle, is2D ), actions.toArray( new String[ 0 ] ) );
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.behaviour( contextMenu, "Context menu", "button3", "shift P");
 		behaviours.install( bdvHandle.getTriggerbindings(), "ContextMenu" );
@@ -443,16 +436,11 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		}
 	}
 
-	private String installShowLabelMaskAsBoundaryBehaviour()
+	private String installConfigureLabelMaskDisplayBehaviour()
 	{
-		final String actionName = "Show Label Mask as Boundary" + BdvUtils.getShortCutString( labelMaskAsBoundaryTrigger );
+		final String actionName = "Configure Label Mask Display";
 
 		sacService.registerAction( actionName, sourceAndConverters -> { labelMasksAsBoundaryDialog(); }  );
-
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-						new Thread( () -> labelMasksAsBoundaryDialog() ).start(),
-				name + "-asBoundaries",
-				labelMaskAsBoundaryTrigger );
 
 		return actionName;
 	}
@@ -565,7 +553,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void labelMasksAsBoundaryDialog()
 	{
-		LabelMaskAsBoundaryDialog dialog = new LabelMaskAsBoundaryDialog();
+		LabelMaskDisplayDialog dialog = new LabelMaskDisplayDialog();
 		dialog.showDialog();
 		final int boundaryThickness = dialog.getBoundaryThickness();
 		final boolean showAsBoundary = dialog.isShowAsBoundary();
@@ -770,15 +758,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		return bdvHandle.getViewerPanel();
 	}
 
-	public void close()
-	{
-		for ( String popupActionName : popupActionNames )
-		{
-			BdvPopupMenus.removeAction( bdvHandle, popupActionName );
-		}
-	}
-
-	public void setTableView( TableRowsTableView< ? > tableView )
+	public void setTableView( TableView< TableRowImageSegment > tableView )
 	{
 		this.tableView = tableView;
 	}

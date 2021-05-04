@@ -40,8 +40,7 @@ public class SegmentationAnnotator
 		SegmentedImagesView imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sourceToMetadata );
 		imagesView.showImages( true, 1 );
 		Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
-		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
-		tableView.setSelectionMode( TableRowsTableView.SelectionMode.FocusOnly );
+		TableView< TableRowImageSegment > tableView = new TableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
 		tableView.showTableAndMenu( imagesView.getWindow() );
 		imagesView.setTableView( tableView );
 	}

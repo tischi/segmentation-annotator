@@ -2,7 +2,7 @@ package de.embl.cba.segmentationannotator.dialog;
 
 import ij.gui.GenericDialog;
 
-public class LabelMaskAsBoundaryDialog
+public class LabelMaskDisplayDialog
 {
 	private static boolean showAsBoundary = false;
 	private static int boundaryThickness = 1;
@@ -10,7 +10,7 @@ public class LabelMaskAsBoundaryDialog
 	public void showDialog()
 	{
 		final GenericDialog gd = new GenericDialog( "Boundary thickness" );
-		gd.addCheckbox( "Show label mask as boundary", showAsBoundary );
+		gd.addCheckbox( "Configure Label Mask Display", showAsBoundary );
 		gd.addNumericField( "Boundary thickness [pixels]", boundaryThickness, 1 );
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return;

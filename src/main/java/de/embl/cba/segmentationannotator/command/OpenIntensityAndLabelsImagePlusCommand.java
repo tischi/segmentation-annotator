@@ -5,6 +5,7 @@ import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.LabelSource;
 import de.embl.cba.segmentationannotator.SegmentedImagesView;
 import de.embl.cba.segmentationannotator.SourceMetadata;
+import de.embl.cba.segmentationannotator.TableView;
 import de.embl.cba.segmentationannotator.Utils;
 import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.labels.LabelAnalyzer;
@@ -72,10 +73,9 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		// create image view
 		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
 		imagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
-		//Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
 
 		// create table view
-		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
+		TableView< TableRowImageSegment > tableView = new TableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
 		tableView.showTableAndMenu( imagesView.getWindow() );
 		imagesView.setTableView( tableView );
 	}
