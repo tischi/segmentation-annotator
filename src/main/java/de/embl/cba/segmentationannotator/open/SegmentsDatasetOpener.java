@@ -1,7 +1,11 @@
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.open;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.Logger;
+import de.embl.cba.segmentationannotator.ImagePathsFromTableRowsExtractor;
+import de.embl.cba.segmentationannotator.SegmentsCreator;
+import de.embl.cba.segmentationannotator.SourceMetadata;
+import de.embl.cba.segmentationannotator.Utils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 
 import java.io.File;

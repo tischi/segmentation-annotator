@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package de.embl.cba.segmentationannotator.converters;
+package de.embl.cba.segmentationannotator.converter;
 
 import bdv.viewer.TimePointListener;
 import de.embl.cba.tables.color.ColoringModel;

@@ -1,4 +1,4 @@
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.open;
 
 import bdv.BigDataViewer;
 import bdv.tools.brightness.ConverterSetup;
@@ -6,6 +6,8 @@ import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.command.OpenFilesWithBigdataviewerBioformatsBridgeCommand;
 import ch.epfl.biop.bdv.bioformats.export.spimdata.BioFormatsConvertFilesToSpimData;
+import de.embl.cba.segmentationannotator.SourceMetadata;
+import de.embl.cba.segmentationannotator.Utils;
 import loci.common.DebugTools;
 import mpicbg.spim.data.generic.AbstractSpimData;
 

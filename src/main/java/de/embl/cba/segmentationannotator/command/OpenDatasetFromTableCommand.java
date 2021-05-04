@@ -1,7 +1,6 @@
 package de.embl.cba.segmentationannotator.command;
 
 import de.embl.cba.segmentationannotator.SegmentationAnnotator;
-import de.embl.cba.segmentationannotator.SegmentsDatasetOpener;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;

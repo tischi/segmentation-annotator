@@ -1,4 +1,4 @@
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.label;
 
 import de.embl.cba.lazyalgorithm.RandomAccessibleIntervalNeighborhoodFilter;
 import de.embl.cba.lazyalgorithm.converter.NeighborhoodNonZeroBoundariesConverter;

@@ -1,4 +1,4 @@
-package de.embl.cba.segmentationannotator;
+package de.embl.cba.segmentationannotator.label;
 
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;

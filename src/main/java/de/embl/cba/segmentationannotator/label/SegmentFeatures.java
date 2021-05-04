@@ -1,4 +1,4 @@
-package de.embl.cba.segmentationannotator.labels;
+package de.embl.cba.segmentationannotator.label;
 
 public class SegmentFeatures
 {

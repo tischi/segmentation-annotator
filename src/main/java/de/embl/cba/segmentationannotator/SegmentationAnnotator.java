@@ -2,11 +2,11 @@ package de.embl.cba.segmentationannotator;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
+import de.embl.cba.segmentationannotator.open.SegmentsDatasetOpener;
 import de.embl.cba.tables.color.LazyCategoryColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import de.embl.cba.tables.view.TableRowsTableView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +18,6 @@ public class SegmentationAnnotator
 
 	public SegmentationAnnotator( String rootDirectory, String relativeTablePath )
 	{
-
 		this.rootDirectory = rootDirectory;
 		this.relativeTablePath = relativeTablePath;
 	}
