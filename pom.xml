@@ -73,7 +73,7 @@
 		<package-name>de.embl.cba</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
-		<scijava.app.directory>/Users/tischer/Desktop/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
+		<scijava.app.directory>/Users/tischer/Desktop/Fiji/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
 		<enforcer.skip>true</enforcer.skip>
 
 		<!-- Java 8	Update Site	-->
@@ -92,17 +92,28 @@
         <imagej-utils.version>0.6.3-SNAPSHOT</imagej-utils.version>
         <imagej-cluster.version>0.6.5</imagej-cluster.version>
 
+		<!-- CLIJ WEKA -->
+		<clijx-weka_.version>0.30.2.0</clijx-weka_.version>
+
 	</properties>
 
 	<repositories>
-		<!-- NB: for SciJava dependencies -->
 		<repository>
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
+		<repository>
+			<id>bintray-haesleinhuepf-snapshots</id>
+			<url>https://api.bintray.com/maven/haesleinhuepf/clij/clijx-weka_/;publish=1</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
+<!--		<dependency>-->
+<!--			<groupId>net.haesleinhuepf</groupId>-->
+<!--			<artifactId>clijx-weka_</artifactId>-->
+<!--			<version>${clijx-weka_.version}</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>

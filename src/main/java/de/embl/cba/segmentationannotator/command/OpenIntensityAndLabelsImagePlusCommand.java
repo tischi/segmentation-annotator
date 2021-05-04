@@ -27,6 +27,7 @@ import spimdata.imageplus.SpimDataFromImagePlusGetter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		// create image view
 		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
 		imagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
-		Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
+		//Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
 
 		// create table view
 		TableRowsTableView< TableRowImageSegment > tableView = new TableRowsTableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
@@ -89,8 +90,6 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		intensitySourceMetadata.isLabelSource = false;
 		intensitySourceMetadata.isPrimaryLabelSource = false;
 		intensitySourceMetadata.imageId = intensitySourceAndConverter.getSpimSource().getName();
-		intensitySourceMetadata.channelName = "channel 0";
-		intensitySourceMetadata.groupId = "group 0";
 		sources.put( intensitySourceAndConverter, intensitySourceMetadata );
 	}
 
@@ -104,8 +103,6 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 		labelSourceMetadata.isLabelSource = true;
 		labelSourceMetadata.isPrimaryLabelSource = true;
 		labelSourceMetadata.imageId = labelSourceAndConverter.getSpimSource().getName();
-		labelSourceMetadata.channelName = "channel 0";
-		labelSourceMetadata.groupId = "group 0";
 		sources.put( labelSourceAndConverter, labelSourceMetadata );
 		return labelSourceMetadata.imageId;
 	}
@@ -125,14 +122,14 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 	@NotNull
 	private Map< String, List< String > > createColumns( Map< Integer, SegmentFeatures > indexToFeatures, String labelImageName )
 	{
-		Map< String, List< String > > columnNameToColumnEntries = new HashMap<>();
+		Map< String, List< String > > columnNameToColumnEntries = new LinkedHashMap<>();
+		columnNameToColumnEntries.put( INDEX, new ArrayList< String >() );
+		columnNameToColumnEntries.put( NAME, new ArrayList< String >() );
 		columnNameToColumnEntries.put( X, new ArrayList< String >() );
 		columnNameToColumnEntries.put( Y, new ArrayList< String >() );
 		columnNameToColumnEntries.put( Z, new ArrayList< String >() );
-		columnNameToColumnEntries.put( NAME, new ArrayList< String >() );
 		columnNameToColumnEntries.put( N_PIXELS, new ArrayList< String >() );
 		columnNameToColumnEntries.put( MEAN_INTENSITY, new ArrayList< String >() );
-		columnNameToColumnEntries.put( INDEX, new ArrayList< String >() );
 
 		for ( Integer labelIndex : indexToFeatures.keySet() )
 		{

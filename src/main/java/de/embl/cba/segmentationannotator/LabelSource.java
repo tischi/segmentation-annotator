@@ -43,15 +43,6 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 		this.interpolators = new DefaultInterpolators();
 	}
 
-	public static < R extends NumericType< R > & RealType< R > > SourceAndConverter< R > asLabelSourceAndConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
-	{
-		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
-		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
-		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
-		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
-		return sourceAndConverter;
-	}
-
 	public void showAsBoundary( boolean showAsBoundaries, int boundaryWidth )
 	{
 		this.showAsBoundaries = showAsBoundaries;
@@ -82,6 +73,7 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 					rai,
 					boundariesConverter,
 					new HyperSphereShape( boundaryWidth ) );
+
 			return boundaries;
 		}
 		else
@@ -133,4 +125,14 @@ public class LabelSource< T extends NumericType< T > & RealType< T > > implement
 	{
 		return source;
 	}
+
+	public static < R extends NumericType< R > & RealType< R > > SourceAndConverter< R > asLabelSourceAndConverter( SourceAndConverter< R > source, Converter< RealType, ARGBType > converter )
+	{
+		LabelSource< R > labelVolatileSource = new LabelSource( source.asVolatile().getSpimSource() );
+		SourceAndConverter volatileSourceAndConverter = new SourceAndConverter( labelVolatileSource , converter );
+		LabelSource< R > labelSource = new LabelSource( source.getSpimSource() );
+		SourceAndConverter sourceAndConverter = new SourceAndConverter( labelSource, converter, volatileSourceAndConverter );
+		return sourceAndConverter;
+	}
+
 }

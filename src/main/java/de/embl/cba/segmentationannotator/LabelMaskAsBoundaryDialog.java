@@ -5,7 +5,7 @@ import ij.gui.GenericDialog;
 public class LabelMaskAsBoundaryDialog
 {
 	private static boolean showAsBoundary = false;
-	private static int boundaryThickness = 3;
+	private static int boundaryThickness = 1;
 
 	public void showDialog()
 	{

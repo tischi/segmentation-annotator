@@ -218,25 +218,30 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		state.setViewerTransform( transform );
 
 		HashMap< String, SourceGroup > groupIdToSourceGroup = new HashMap< String, SourceGroup >();
-
 		sources.forEach( source ->
 		{
 			addSourceToBdv( source );
-			addSourceToGroup( groupIdToSourceGroup, source );
-			state.setDisplayMode( DisplayMode.FUSEDGROUP );
+			if( sourceToMetadata.get( source ).groupId != null )
+			{
+				addSourceToGroup( groupIdToSourceGroup, source, sourceToMetadata.get( source ).groupId );
+			}
 		} );
 
-		// remove default groups
-		for ( int i = 0; i < 10; i++ )
+		if ( ! groupIdToSourceGroup.isEmpty() )
 		{
-			state.removeGroup( state.getCurrentGroup() );
+			state.setDisplayMode( DisplayMode.FUSEDGROUP );
+			// remove default groups
+			for ( int i = 0; i < 10; i++ )
+			{
+				state.removeGroup( state.getCurrentGroup() );
+			}
 		}
 	}
 
 	// TODO: the group Ids do not contain the channel name
-	private void addSourceToGroup( HashMap< String, SourceGroup > groupIdToSourceGroup, SourceAndConverter< R > source )
+	private void addSourceToGroup( HashMap< String, SourceGroup > groupIdToSourceGroup, SourceAndConverter< R > source, String groupId )
 	{
-		String groupId = sourceToMetadata.get( source ).groupId;
+
 		if ( ! groupIdToSourceGroup.keySet().contains( groupId ) )
 		{
 			SourceGroup sourceGroup = new SourceGroup();
@@ -324,6 +329,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		installSelectionColoringModeBehaviour();
 		installRandomColorShufflingBehaviour();
 
+		addSelectionPopupMenu();
 		addUndoSelectionPopupMenu();
 		addStartNewAnnotationPopupMenu();
 		addContinueAnnotationPopupMenu();
@@ -380,12 +386,28 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	}
 
 	// TODO: put all the menu stuff into an own class at some point
+	private void addSelectionPopupMenu()
+	{
+		final ArrayList< String > menuNames = new ArrayList<>();
+		menuNames.add( getSegmentsMenuName() );
+
+		final String actionName = "Toggle Segment Selection" + BdvUtils.getShortCutString( selectTrigger );
+		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
+
+		BdvPopupMenus.addAction(
+				bdvHandle,
+				menuNames,
+				actionName,
+				( x, y ) -> new Thread( () -> toggleSelectionAtMousePosition() ).start()
+		);
+	}
+
 	private void addUndoSelectionPopupMenu()
 	{
 		final ArrayList< String > menuNames = new ArrayList<>();
 		menuNames.add( getSegmentsMenuName() );
 
-		final String actionName = "Select None" + BdvUtils.getShortCutString( selectNoneTrigger );
+		final String actionName = "Undo Selection" + BdvUtils.getShortCutString( selectNoneTrigger );
 		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
 
 		BdvPopupMenus.addAction(
