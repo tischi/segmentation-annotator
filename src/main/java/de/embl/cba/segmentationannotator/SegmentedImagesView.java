@@ -40,6 +40,7 @@ import de.embl.cba.bdv.utils.Logger;
 import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
 import de.embl.cba.segmentationannotator.converters.LabelConverter;
 import de.embl.cba.segmentationannotator.converters.SegmentsConverter;
+import de.embl.cba.segmentationannotator.dialog.LabelMaskAsBoundaryDialog;
 import de.embl.cba.tables.color.CategoryColoringModel;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.SelectionColoringModel;
@@ -64,6 +65,9 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.bdv.navigate.ViewerTransformChanger;
+import sc.fiji.bdvpg.behaviour.SourceAndConverterContextMenuClickBehaviour;
+import sc.fiji.bdvpg.scijava.services.SourceAndConverterService;
+import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
@@ -100,7 +104,9 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private Set< String > popupActionNames = new HashSet<>(  );
 	private boolean is2D;
 	private SynchronizedViewerState state;
+	// TODO: remove table view from this class!
 	private TableRowsTableView< ? > tableView;
+	private SourceAndConverterService sacService;
 
 	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
 	{
@@ -323,52 +329,49 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdvHandle.getBdvHandle().getTriggerbindings(), name + "-bdv-select-handler" );
 
-		// TODO: move the Behaviours into the PopupMenus
-		installSelectionBehaviour();
+		sacService = ( SourceAndConverterService ) SourceAndConverterServices.getSourceAndConverterService();
+
+		final ArrayList< String > actions = new ArrayList<>();
+		actions.add( installUndoSegmentSelectionBehaviour() );
+		actions.add( installRandomColorShufflingBehaviour() );
+		actions.add( installSegmentSelectionBehaviour() );
+		actions.add( installSelectionColoringModeBehaviour() );
+		actions.add( installStartNewAnnotationBehaviour() );
+		actions.add( installContinueAnnotationBehaviour() );
+		actions.add( installShowLabelMaskAsBoundaryBehaviour() );
+		actions.add( addReportIssuePopupMenu() );
+		//addMoveToPopupMenu();
+		//addAnimationSettingsPopupMenu();
+
+		SourceAndConverterContextMenuClickBehaviour contextMenu = new SourceAndConverterContextMenuClickBehaviour( bdvHandle, () -> null, actions.toArray( new String[ 0 ] ) );
+		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
+		behaviours.behaviour( contextMenu, "Context menu", "button3", "shift P");
+		behaviours.install( bdvHandle.getTriggerbindings(), "ContextMenu" );
+	}
+
+	private String installUndoSegmentSelectionBehaviour()
+	{
+		final String actionName = "Undo Segment Selections" + BdvUtils.getShortCutString( selectNoneTrigger );
+		sacService.registerAction( actionName, sourceAndConverters -> {
+			selectNone();
+		} );
+
 		installUndoSelectionBehaviour();
-		installSelectionColoringModeBehaviour();
-		installRandomColorShufflingBehaviour();
-
-		addSelectionPopupMenu();
-		addUndoSelectionPopupMenu();
-		addStartNewAnnotationPopupMenu();
-		addContinueAnnotationPopupMenu();
-		addSelectionColoringModePopupMenu();
-		addShowLabelMaskAsBoundaryPopupMenu();
-		addReportIssuePopupMenu();
-		addMoveToPopupMenu();
-		addShuffleRandomColorsPopupMenu();
-		addAnimationSettingsPopupMenu();
+		return actionName;
 	}
 
-	private void addStartNewAnnotationPopupMenu()
+	private String installStartNewAnnotationBehaviour()
 	{
-		ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getSegmentsMenuName() );
-		menuNames.add( "Annotate" );
-		String actionName = "Start New Annotation...";
-		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
-		BdvPopupMenus.addAction(
-				bdvHandle,
-				menuNames,
-				actionName,
-				( x, y ) -> new Thread( () -> tableView.showNewAnnotationDialog() ).start()
-		);
+		final String actionName = "Start New Annotation...";
+		sacService.registerAction( actionName, sourceAndConverters -> {tableView.showNewAnnotationDialog();}  );
+		return actionName;
 	}
 
-	private void addContinueAnnotationPopupMenu()
+	private String installContinueAnnotationBehaviour()
 	{
-		ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getSegmentsMenuName() );
-		menuNames.add( "Annotate" );
-		String actionName = "Continue Annotation...";
-		popupActionNames.add( BdvPopupMenus.getCombinedMenuActionName(  menuNames, actionName ) );
-		BdvPopupMenus.addAction(
-				bdvHandle,
-				menuNames,
-				actionName,
-				( x, y ) -> new Thread( () -> tableView.showContinueAnnotationDialog() ).start()
-		);
+		final String actionName = "Continue Annotation...";
+		sacService.registerAction( actionName, sourceAndConverters -> {tableView.showContinueAnnotationDialog();}  );
+		return actionName;
 	}
 
 	private void addAnimationSettingsPopupMenu()
@@ -440,26 +443,25 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		}
 	}
 
-	private void addShowLabelMaskAsBoundaryPopupMenu()
+	private String installShowLabelMaskAsBoundaryBehaviour()
 	{
-		final ArrayList< String > menuNames = new ArrayList<>();
-		menuNames.add( getSegmentsMenuName() ); // TODO: populate with the different label mask groups
+		final String actionName = "Show Label Mask as Boundary" + BdvUtils.getShortCutString( labelMaskAsBoundaryTrigger );
 
-		BdvPopupMenus.addAction(
-				bdvHandle,
-				menuNames,
-				"Show as Boundary",
-				( x, y ) -> { labelMasksAsBoundaryDialog(); }
-			);
+		sacService.registerAction( actionName, sourceAndConverters -> { labelMasksAsBoundaryDialog(); }  );
+
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
+						new Thread( () -> labelMasksAsBoundaryDialog() ).start(),
+				name + "-asBoundaries",
+				labelMaskAsBoundaryTrigger );
+
+		return actionName;
 	}
 
-	private void addReportIssuePopupMenu()
+	private String addReportIssuePopupMenu()
 	{
-		BdvPopupMenus.addAction(
-				bdvHandle,
-				"Report Issue",
-				( x, y ) -> { reportIssueDialog(); }
-		);
+		final String actionName = "Report an Issue...";
+		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
+		return actionName;
 	}
 
 	private void addMoveToPopupMenu()
@@ -521,28 +523,16 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		setSegmentFocusAnimationDurationMillis( ( int ) genericDialog.getNextNumber() );
 	}
 
-	private void installRandomColorShufflingBehaviour()
+	private String installRandomColorShufflingBehaviour()
 	{
+		final String actionName = "Shuffle Random Label Colors" + BdvUtils.getShortCutString( shuffleRandomColorTrigger );
+		sacService.registerAction( actionName, sourceAndConverters -> { shuffleRandomColors(); } );
+
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> shuffleRandomColors() ).start(),
 					name + "-change-color-random-seed",
 				shuffleRandomColorTrigger );
-	}
-
-	private void installShowLabelMaskAsBinaryMaskBehaviour()
-	{
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-						new Thread( () -> toggleLabelMaskAsBinaryMask() ).start(),
-				name + "-asMask",
-				labelMaskAsBinaryMaskTrigger );
-	}
-
-	private void installShowLabelMaskAsBoundaryBehaviour()
-	{
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-						new Thread( () -> labelMasksAsBoundaryDialog() ).start(),
-				name + "-asBoundaries",
-				labelMaskAsBoundaryTrigger );
+		return actionName;
 	}
 
 	private synchronized void shuffleRandomColors()
@@ -649,12 +639,16 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		BdvUtils.repaint( bdvHandle );
 	}
 
-	private void installSelectionBehaviour()
+	private String installSegmentSelectionBehaviour()
 	{
+		final String actionName = "Toggle Segment Selection" + BdvUtils.getShortCutString( selectTrigger );
+		sacService.registerAction( actionName, sourceAndConverters -> {toggleSelectionAtMousePosition();}  );
+
 		behaviours.behaviour(
 				( ClickBehaviour ) ( x, y ) ->
 						new Thread( () -> toggleSelectionAtMousePosition() ).start(),
 				name + "-toggle-select", selectTrigger ) ;
+		return actionName;
 	}
 
 	private synchronized void toggleSelectionAtMousePosition()
@@ -756,16 +750,19 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		return null;
 	}
 
-	private void installSelectionColoringModeBehaviour( )
+	private String installSelectionColoringModeBehaviour( )
 	{
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) ->
-				new Thread( () ->
-				{
-					if ( ! isLabelSourceActive() ) return;
-					selectionColoringModel.iterateSelectionMode();
-					BdvUtils.repaint( bdvHandle );
-				} ).start(),
-				name + "-iterate-select", iterateSelectionModeTrigger );
+		final String actionName = "Adjust Unselected Segments Brightness";
+		sacService.registerAction( actionName, sourceAndConverters -> {
+			new Thread( () -> {
+				final GenericDialog genericDialog = new GenericDialog( actionName );
+				genericDialog.addNumericField( "Brightness [0,1]", selectionColoringModel.getBrightnessNotSelected() );
+				genericDialog.showDialog();
+				if ( genericDialog.wasCanceled() ) return;
+				selectionColoringModel.setSelectionColoringMode( SelectionColoringModel.SelectionColoringMode.DimNotSelected, genericDialog.getNextNumber()  );
+			}).start();
+		});
+		return actionName;
 	}
 
 	public Component getWindow()

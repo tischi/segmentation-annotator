@@ -10,7 +10,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>segmentation-annotator</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.0</version>
 
 	<name>segmentation-annotator</name>
 	<description>Explore and annotate image segmentations</description>
@@ -102,10 +102,10 @@
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
-		<repository>
-			<id>bintray-haesleinhuepf-snapshots</id>
-			<url>https://api.bintray.com/maven/haesleinhuepf/clij/clijx-weka_/;publish=1</url>
-		</repository>
+<!--		<repository>-->
+<!--			<id>bintray-haesleinhuepf-snapshots</id>-->
+<!--			<url>https://api.bintray.com/maven/haesleinhuepf/clij/clijx-weka_/;publish=1</url>-->
+<!--		</repository>-->
 	</repositories>
 
 	<dependencies>
