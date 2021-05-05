@@ -2,6 +2,12 @@
 
 Fiji plugin for exploration and annotation of segmented images.
 
+## Short demo videos
+
+- [Segmented object exploration](https://youtu.be/EvAvqQKFkMQ)
+- [3D object rendering](https://youtu.be/SOw_QtP0DsM)
+- [Object annotation](https://youtu.be/PMe4d6EpqGk)
+
 ## Install
 
 1. Please install [Fiji](https://fiji.sc) onto your computer.
@@ -19,13 +25,13 @@ Fiji plugin for exploration and annotation of segmented images.
 
 - `[ Plugins > Segmentation > Annotator > Open Intensity and Label Mask Images... ]`
 
+
+
 ### Open data set from table
 
-- (Optional) Download a demo data set:
+- Download a demo data set:
    - [Two segmented images (cells and golgi)](https://oc.embl.de/index.php/s/L4Kv5YgKgiMCFUe)
 - `[ Plugins > Segmentation > Annotator > Open Dataset from Table... ]`
-
-BigDataViewer and a table should appear:
 
 <img src="https://user-images.githubusercontent.com/2157566/101176937-7ba63480-3647-11eb-9952-543e153a99e5.png" width="700">
 
