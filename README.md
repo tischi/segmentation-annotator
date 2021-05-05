@@ -18,6 +18,12 @@ Fiji plugin for exploration and annotation of segmented images.
    - [ Close ]
 1. Restart Fiji
 
+## Quick start
+
+After installation (see above). You can run below ImageJ macros to launch the application:
+
+- [Minimal 2D segmented image exploration](https://raw.githubusercontent.com/tischi/segmentation-annotator/master/scripts/2d-image-two-objects.ijm)
+- [A bit larger 3D segmented image exploration](https://raw.githubusercontent.com/tischi/segmentation-annotator/master/scripts/3d-image-many-objects.ijm)
 
 ## Run
 
