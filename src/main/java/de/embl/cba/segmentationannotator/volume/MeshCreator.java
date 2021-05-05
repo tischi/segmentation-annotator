@@ -53,7 +53,7 @@ public class MeshCreator< S extends ImageSegment >
 				Logger.info( "# 3D View:\n" +
 						"The bounding box of the selected segment has " + numElements + " voxels.\n" +
 						"The maximum recommended number is however only " + maxNumSegmentVoxels + ".\n" +
-						"It can take a bit of time to load...." );
+						"It can take a bit of time to render...." );
 			}
 		}
 
