@@ -1,7 +1,9 @@
 package users;
 
-import de.embl.cba.segmentationannotator.SegmentationAnnotator;
+import de.embl.cba.segmentationannotator.command.OpenDatasetFromTableCommand;
 import net.imagej.ImageJ;
+
+import java.io.File;
 
 public class Joanna
 {
@@ -9,9 +11,9 @@ public class Joanna
 	{
 		ImageJ ij = new ImageJ();
 		ij.ui().showUI();
-		String rootDirectory = "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data";
-		String relativeTablePath = "table.csv";
 
-		new SegmentationAnnotator( rootDirectory, relativeTablePath ).run();
+		final OpenDatasetFromTableCommand command = new OpenDatasetFromTableCommand();
+		command.segmentsTableFile = new File( "/Users/tischer/Documents/joanna-zukowska-golgi-morphology/src/test/resources/image-data/table.csv" );
+		command.run();
 	}
 }

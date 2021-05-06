@@ -87,7 +87,7 @@
 
         <!-- BIOP -->
         <bigdataviewer-bioformats.version>0.2.15</bigdataviewer-bioformats.version>
-		<bigdataviewer-playground.version>0.2.14-SNAPSHOT</bigdataviewer-playground.version>
+		<bigdataviewer-playground.version>0.2.14</bigdataviewer-playground.version>
 		<bigdataviewer-spimdata-extras.version>0.1.1-SNAPSHOT</bigdataviewer-spimdata-extras.version>
 
 		<!-- EMBL CBA -->
@@ -105,18 +105,18 @@
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
-<!--		<repository>-->
-<!--			<id>bintray-haesleinhuepf-snapshots</id>-->
-<!--			<url>https://api.bintray.com/maven/haesleinhuepf/clij/clijx-weka_/;publish=1</url>-->
-<!--		</repository>-->
 	</repositories>
-
 	<dependencies>
 <!--		<dependency>-->
 <!--			<groupId>net.haesleinhuepf</groupId>-->
-<!--			<artifactId>clijx-weka_</artifactId>-->
-<!--			<version>${clijx-weka_.version}</version>-->
+<!--			<artifactId>clij2_</artifactId>-->
+<!--			<version>2.2.0.19</version>-->
 <!--		</dependency>-->
+		<dependency>
+			<groupId>net.haesleinhuepf</groupId>
+			<artifactId>clijx-weka_</artifactId>
+			<version>0.31.0.6</version>
+		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>

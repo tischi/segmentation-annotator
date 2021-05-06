@@ -30,16 +30,10 @@ package de.embl.cba.segmentationannotator.open;
 
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
-import de.embl.cba.tables.imagesegment.SegmentProperty;
-import de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog;
-import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog.NO_COLUMN_SELECTED;
 
 public class SegmentsTableOpener
 {
@@ -69,35 +63,10 @@ public class SegmentsTableOpener
 	{
 		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath );
 
-		// TODO: Ask here about whether or not time points are one or zero based!
-		final SegmentPropertyColumnsSelectionDialog selectionDialog = new SegmentPropertyColumnsSelectionDialog( columnNameToColumnEntries.keySet() );
-		boolean isOneBasedTimePoint = false;
+		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnNameToColumnEntries );
 
-		Map< SegmentProperty, String > segmentPropertyToColumnName = selectionDialog.fetchUserInput();
-
-		labelImageColumnName = segmentPropertyToColumnName.get( SegmentProperty.LabelImage );
-
-		final Map< SegmentProperty, List< String > > segmentPropertyToColumnEntries = createSegmentPropertyToColumnEntriesMap( segmentPropertyToColumnName, columnNameToColumnEntries  );
-
-		final List< TableRowImageSegment > segments = SegmentUtils.tableRowImageSegmentsFromColumns( columnNameToColumnEntries, segmentPropertyToColumnEntries, isOneBasedTimePoint );
+		final List< TableRowImageSegment > segments = tableRowsCreator.getTableRowImageSegments();
 
 		return segments;
-	}
-
-	private static Map< SegmentProperty, List< String > > createSegmentPropertyToColumnEntriesMap( Map< SegmentProperty, String > segmentPropertyToColumnName, Map< String, List< String > > columnNameToColumnEntries )
-	{
-		final Map< SegmentProperty, List< String > > segmentPropertyToColumnEntries = new LinkedHashMap<>();
-
-		for( SegmentProperty property : segmentPropertyToColumnName.keySet() )
-		{
-			String columnName = segmentPropertyToColumnName.get( property );
-
-			if ( columnName.equals( NO_COLUMN_SELECTED ) )
-				continue;
-
-			segmentPropertyToColumnEntries.put( property, columnNameToColumnEntries.get( columnName ) );
-		}
-
-		return segmentPropertyToColumnEntries;
 	}
 }

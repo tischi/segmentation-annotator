@@ -355,6 +355,7 @@ public class TableView< T extends TableRow > extends JPanel
 			menuBar.add( createPlotMenu() );
 		}
 
+
 		// menuBar.add( createMeasureMenu() ); // TODO: finish implementing this
 
 		menuBar.add( createHelpMenu() );
