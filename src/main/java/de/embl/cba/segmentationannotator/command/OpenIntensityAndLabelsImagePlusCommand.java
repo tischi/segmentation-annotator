@@ -1,20 +1,15 @@
 package de.embl.cba.segmentationannotator.command;
 
 import bdv.viewer.SourceAndConverter;
-import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
+import de.embl.cba.segmentationannotator.ImagePlusToSourceAndConverter;
+import de.embl.cba.segmentationannotator.SourcesAndSegmentsViewer;
 import de.embl.cba.segmentationannotator.label.LabelSource;
-import de.embl.cba.segmentationannotator.SegmentedImagesView;
 import de.embl.cba.segmentationannotator.SourceMetadata;
-import de.embl.cba.segmentationannotator.TableView;
 import de.embl.cba.segmentationannotator.converter.LabelConverter;
 import de.embl.cba.segmentationannotator.label.LabelAnalyzer;
 import de.embl.cba.segmentationannotator.label.SegmentFeatures;
-import de.embl.cba.segmentationannotator.volume.SegmentsVolumeView;
-import de.embl.cba.tables.color.LazyCategoryColoringModel;
-import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.imagesegment.SegmentProperty;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
-import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.ImagePlus;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -43,73 +38,28 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 	public static final String INDEX = "label_index";
 
 	@Parameter( label = "Intensity Image" )
-	public ImagePlus intensityImagePlus;
+	public ImagePlus intensityImage;
 
 	@Parameter( label = "Label Mask Image" )
-	public ImagePlus labelImagePlus;
+	public ImagePlus labelImage;
 
 	@Override
 	public void run()
 	{
 		// create images
 		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
-		final String labelImageId = addLabelSource( sources );
-		addIntensitySource( sources );
+		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
+		ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
 
 		// create labels and features
-		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImagePlus.getImageStack(), intensityImagePlus.getImageStack(), intensityImagePlus.getCalibration() );
+		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), intensityImage.getImageStack(), intensityImage.getCalibration() );
 		Map< String, List< String > > columns = createColumns( labelToFeatures, labelImageId );
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( columns );
 
 		// create table
 		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( columns, segmentPropertyToColumnName, true );
 
-		// create selection and coloring models
-		DefaultSelectionModel< TableRowImageSegment > selectionModel = new DefaultSelectionModel<>();
-		LazyCategoryColoringModel< TableRowImageSegment > coloringModel = new LazyCategoryColoringModel<>( new GlasbeyARGBLut( 255 ) );
-		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
-
-		// create image view
-		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
-		imagesView.showImages( intensityImagePlus.getNSlices() == 1, intensityImagePlus.getNFrames() );
-
-		// table view
-		TableView< TableRowImageSegment > tableView = new TableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
-		tableView.showTableAndMenu( imagesView.getWindow() );
-		imagesView.setTableView( tableView );
-
-		// volume view
-		final SegmentsVolumeView< TableRowImageSegment > volumeView = new SegmentsVolumeView<>( selectionModel, selectionColoringModel, sources.keySet() );
-		selectionModel.listeners().add( volumeView );
-		selectionColoringModel.listeners().add( volumeView );
-		imagesView.setVolumeView( volumeView );
-	}
-
-	public void addIntensitySource( Map< SourceAndConverter< ? >, SourceMetadata > sources )
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-
-		final SourceAndConverter intensitySourceAndConverter = new SourceAndConverterFromSpimDataCreator( getter.apply( intensityImagePlus ) ).getSetupIdToSourceAndConverter().get( 0 );
-
-		final SourceMetadata intensitySourceMetadata = new SourceMetadata();
-		intensitySourceMetadata.isLabelSource = false;
-		intensitySourceMetadata.isPrimaryLabelSource = false;
-		intensitySourceMetadata.imageId = intensitySourceAndConverter.getSpimSource().getName();
-		sources.put( intensitySourceAndConverter, intensitySourceMetadata );
-	}
-
-	public String addLabelSource( Map< SourceAndConverter< ? >, SourceMetadata > sources )
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-
-		final SourceAndConverter labelSourceAndConverter = new SourceAndConverterFromSpimDataCreator( getter.apply( labelImagePlus ) ).getSetupIdToSourceAndConverter().get( 0 );
-
-		final SourceMetadata labelSourceMetadata = new SourceMetadata();
-		labelSourceMetadata.isLabelSource = true;
-		labelSourceMetadata.isPrimaryLabelSource = true;
-		labelSourceMetadata.imageId = labelSourceAndConverter.getSpimSource().getName();
-		sources.put( labelSourceAndConverter, labelSourceMetadata );
-		return labelSourceMetadata.imageId;
+		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
 	}
 
 	@NotNull
@@ -153,7 +103,7 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 	private SourceAndConverter getIntensitySourceAndConverter()
 	{
 		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > intensity = getter.apply( intensityImagePlus );
+		final AbstractSpimData< ? > intensity = getter.apply( intensityImage );
 		final SourceAndConverter intensitySourceAndConverter = new SourceAndConverterFromSpimDataCreator( intensity ).getSetupIdToSourceAndConverter().get( 0 );
 		return intensitySourceAndConverter;
 	}
@@ -162,7 +112,7 @@ public class OpenIntensityAndLabelsImagePlusCommand implements Command
 	private SourceAndConverter getLabelSourceAndConverter()
 	{
 		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > labels = getter.apply( labelImagePlus );
+		final AbstractSpimData< ? > labels = getter.apply( labelImage );
 		final SourceAndConverter labelSourceAndConverter = new SourceAndConverterFromSpimDataCreator( labels ).getSetupIdToSourceAndConverter().get( 0 );
 		LabelConverter labelConverter = new LabelConverter();
 		final LabelSource labelSource = new LabelSource<>( labelSourceAndConverter.getSpimSource() );

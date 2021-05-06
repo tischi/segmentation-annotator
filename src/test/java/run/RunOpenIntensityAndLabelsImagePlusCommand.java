@@ -13,11 +13,11 @@ public class RunOpenIntensityAndLabelsImagePlusCommand
 
 		final OpenIntensityAndLabelsImagePlusCommand command = new OpenIntensityAndLabelsImagePlusCommand();
 		String root = "/Users/tischer/Documents/segmentations-explorer/";
-		command.intensityImagePlus = IJ.openImage( root + "src/test/resources/intensity_image_3d.zip");
-		command.labelImagePlus = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
+		command.intensityImage = IJ.openImage( root + "src/test/resources/intensity_image_3d.zip");
+		command.labelImage = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
 
-		command.intensityImagePlus = IJ.openImage( "/Users/tischer/Desktop/Silvija/stackreg_20210324_PCNA_20x_1um_amst_aligned-crop.tif");
-		command.labelImagePlus = IJ.openImage( "/Users/tischer/Desktop/Silvija/stackreg_20210324_PCNA_20x_1um_amst_aligned-crop-fg-probability-8bit-cellpose-d10_cp-6_ai2.tif");
+		command.intensityImage = IJ.openImage( "/Users/tischer/Desktop/Silvija/stackreg_20210324_PCNA_20x_1um_amst_aligned-crop.tif");
+		command.labelImage = IJ.openImage( "/Users/tischer/Desktop/Silvija/stackreg_20210324_PCNA_20x_1um_amst_aligned-crop-fg-probability-8bit-cellpose-d10_cp-6_ai2.tif");
 
 		command.run();
 	}

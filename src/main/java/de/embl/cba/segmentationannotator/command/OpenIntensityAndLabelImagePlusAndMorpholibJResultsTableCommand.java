@@ -28,6 +28,10 @@
  */
 package de.embl.cba.segmentationannotator.command;
 
+import bdv.viewer.SourceAndConverter;
+import de.embl.cba.segmentationannotator.ImagePlusToSourceAndConverter;
+import de.embl.cba.segmentationannotator.SourceMetadata;
+import de.embl.cba.segmentationannotator.SourcesAndSegmentsViewer;
 import de.embl.cba.segmentationannotator.open.InteractiveTableRowImageSegmentsFromColumnsCreator;
 import de.embl.cba.tables.TableColumns;
 import de.embl.cba.tables.imagesegment.SegmentProperty;
@@ -74,19 +78,29 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 	@Override
 	public void run()
 	{
+		// create sources
+		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
+		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
+		ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
+
+		// create table
 		final ResultsTableFetcher tableFetcher = new ResultsTableFetcher();
 		ResultsTable resultsTable = tableFetcher.fetch( resultsTableTitle );
-		final List< TableRowImageSegment > tableRowImageSegments = createMLJTableRowImageSegments( resultsTable );
+		final List< TableRowImageSegment > tableRowImageSegments = createMLJTableRowImageSegments( resultsTable, labelImageId );
+
+		// view
+		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
+
 	}
 
-	private List< TableRowImageSegment > createMLJTableRowImageSegments( ResultsTable resultsTable )
+	private List< TableRowImageSegment > createMLJTableRowImageSegments( ResultsTable resultsTable, String labelImageId )
 	{
 		Map< String, List< String > > columns = TableColumns.columnsFromImageJ1ResultsTable( resultsTable );
 
 		columns = TableColumns.addLabelImageIdColumn(
 				columns,
 				COLUMN_NAME_LABEL_IMAGE_ID,
-				labelImage.getTitle() );
+				labelImageId );
 
 		// TODO: replace this by proper bounding box
 		if ( labelImage.getNSlices() > 1 )
