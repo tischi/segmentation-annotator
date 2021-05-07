@@ -91,9 +91,7 @@
 		<bigdataviewer-spimdata-extras.version>0.1.1-SNAPSHOT</bigdataviewer-spimdata-extras.version>
 
 		<!-- EMBL CBA -->
-        <imaris-writer.version>0.2.3</imaris-writer.version>
-        <imagej-utils.version>0.6.3-SNAPSHOT</imagej-utils.version>
-        <imagej-cluster.version>0.6.5</imagej-cluster.version>
+        <imagej-utils.version>0.6.3</imagej-utils.version>
 
 		<!-- CLIJ WEKA -->
 		<clijx-weka_.version>0.30.2.0</clijx-weka_.version>
