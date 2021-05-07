@@ -12,4 +12,4 @@ rename("labels");
 setMinAndMax(0, 2);
 
 // open with SegmentationAnnotator
-run("Open Intensity and Label Mask Images...", "intensityimageplus=intensities labelimageplus=labels");
+run("Open Intensity and Label Mask Image...", "intensityimage=intensities labelimage=labels");
