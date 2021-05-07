@@ -72,7 +72,7 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 	@Parameter ( label = "Label mask image" )
 	public ImagePlus labelImage;
 
-	@Parameter ( label = "Results table title" )
+	@Parameter ( label = "MorpholibJ results table title" )
 	public String resultsTableTitle;
 
 	@Override
@@ -90,7 +90,6 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 
 		// view
 		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
-
 	}
 
 	private List< TableRowImageSegment > createMLJTableRowImageSegments( ResultsTable resultsTable, String labelImageId )
@@ -182,21 +181,4 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 
 		return segmentPropertyToColumn;
 	}
-
-	private List< TableRowImageSegment > processTable()
-	{
-		final ResultsTableFetcher tableFetcher = new ResultsTableFetcher();
-		ResultsTable resultsTable = tableFetcher.fetch( resultsTableTitle );
-		Map< String, List< String > > columnNameToColumn = TableColumns.columnsFromImageJ1ResultsTable( resultsTable );
-		final InteractiveTableRowImageSegmentsFromColumnsCreator columnsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnNameToColumn );
-		final List< TableRowImageSegment > tableRowImageSegments = columnsCreator.getTableRowImageSegments();
-
-		columnNameToColumn = TableColumns.addLabelImageIdColumn(
-				columnNameToColumn,
-				COLUMN_NAME_LABEL_IMAGE_ID,
-				labelImage.getTitle() );
-
-		return tableRowImageSegments;
-	}
-
 }
