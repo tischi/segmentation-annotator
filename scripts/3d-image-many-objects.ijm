@@ -9,4 +9,4 @@ open("https://raw.githubusercontent.com/tischi/segmentation-annotator/master/src
 rename("labels");
 
 // open with SegmentationAnnotator
-run("Open Intensity and Label Mask Images...", "intensityimageplus=intensities labelimageplus=labels");
+run("Open Intensity and Label Mask Image...", "intensityimage=intensities labelimage=labels");
