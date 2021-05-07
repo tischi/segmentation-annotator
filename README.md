@@ -2,11 +2,12 @@
 
 Fiji plugin for exploration and annotation of segmented images.
 
-## Short demo videos
-
-- [Segmented object exploration](https://youtu.be/EvAvqQKFkMQ)
-- [3D object rendering](https://youtu.be/SOw_QtP0DsM)
-- [Object annotation](https://youtu.be/PMe4d6EpqGk)
+Explore
+<a href="https://youtu.be/EvAvqQKFkMQ"><img src="doc/segmented-image-exploration-youtube.png" width="185"></a>
+Render
+<a href="https://youtu.be/SOw_QtP0DsM"><img src="doc/3d-object-rendering-youtube.png" width="220"></a>
+Annotate
+<a href="https://youtu.be/PMe4d6EpqGk"><img src="doc/object-annotation-youtube.png" width="200"></a>
 
 ## Install
 
