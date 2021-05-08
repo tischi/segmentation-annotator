@@ -105,15 +105,9 @@
 		</repository>
 	</repositories>
 	<dependencies>
-<!--		<dependency>-->
-<!--			<groupId>net.haesleinhuepf</groupId>-->
-<!--			<artifactId>clij2_</artifactId>-->
-<!--			<version>2.2.0.19</version>-->
-<!--		</dependency>-->
 		<dependency>
-			<groupId>net.haesleinhuepf</groupId>
-			<artifactId>clijx-weka_</artifactId>
-			<version>0.31.0.6</version>
+			<groupId>sc.fiji</groupId>
+			<artifactId>Trainable_Segmentation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
@@ -155,7 +149,6 @@
 			<artifactId>j3dcore</artifactId>
 			<version>${j3dcore.version}</version>
 		</dependency>
-
 	</dependencies>
 
 </project>

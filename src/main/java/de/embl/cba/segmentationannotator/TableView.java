@@ -31,7 +31,6 @@ package de.embl.cba.segmentationannotator;
 import bdv.tools.HelpDialog;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.annotate.Annotator;
-import de.embl.cba.segmentationannotator.classify.CLIJAvailabilityChecker;
 import de.embl.cba.segmentationannotator.classify.ClassifyDialog;
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
@@ -52,12 +51,7 @@ import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
-import ij.IJ;
 import ij.gui.GenericDialog;
-import net.haesleinhuepf.clijx.weka.ApplyWekaModel;
-import net.haesleinhuepf.clijx.weka.ApplyWekaToTable;
-import net.haesleinhuepf.clijx.weka.CLIJxWeka2;
-import net.haesleinhuepf.clijx.weka.TrainWekaFromTable;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.io.FilenameUtils;
 
@@ -610,17 +604,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 		menuItem.addActionListener( e ->
 		{
-			if ( new CLIJAvailabilityChecker().isAvailable() )
-			{
-				new ClassifyDialog().showDialog();
-
-				
-				//final CLIJxWeka2 cliJxWeka2 = TrainWekaFromTable.trainWekaFromTable();
-				//cliJxWeka2.getClassifier();
-				//ApplyWekaToTable.applyWekaToTable(  cliJxWeka2 );
-
-			}
-
+			new ClassifyDialog().showDialog();
 		} );
 
 		return menuItem;
