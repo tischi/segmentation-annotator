@@ -1,4 +1,4 @@
-package de.embl.cba.segmentationannotator.dialog;
+package de.embl.cba.segmentationannotator.label;
 
 import ij.gui.GenericDialog;
 

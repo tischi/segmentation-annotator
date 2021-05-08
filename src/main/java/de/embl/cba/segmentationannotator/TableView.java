@@ -29,9 +29,10 @@
 package de.embl.cba.segmentationannotator;
 
 import bdv.tools.HelpDialog;
-import de.embl.cba.bdv.utils.lut.ARGBLut;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.annotate.Annotator;
+import de.embl.cba.segmentationannotator.classify.CLIJAvailabilityChecker;
+import de.embl.cba.segmentationannotator.classify.ClassifyDialog;
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
 import de.embl.cba.tables.TableRows;
@@ -39,7 +40,6 @@ import de.embl.cba.tables.TableUIs;
 import de.embl.cba.tables.Tables;
 import de.embl.cba.tables.color.CategoryTableRowColumnColoringModel;
 import de.embl.cba.tables.color.ColorUtils;
-import de.embl.cba.tables.color.ColoringLuts;
 import de.embl.cba.tables.color.ColoringModel;
 import de.embl.cba.tables.color.ColumnColoringModel;
 import de.embl.cba.tables.color.ColumnColoringModelCreator;
@@ -52,9 +52,9 @@ import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
-import de.embl.cba.tables.view.TableRowsTableView;
 import ij.IJ;
 import ij.gui.GenericDialog;
+import net.haesleinhuepf.clijx.weka.TrainWekaFromTable;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.io.FilenameUtils;
 
@@ -176,7 +176,8 @@ public class TableView< T extends TableRow > extends JPanel
 		if ( selectionColoringModel != null)
 			configureTableRowColoring();
 
-		createAndShowMenu();
+		createMenuBar();
+		showMenu( menuBar );
 	}
 
 	private void configureTableRowColoring()
@@ -346,17 +347,18 @@ public class TableView< T extends TableRow > extends JPanel
 		menuBar.add( createTableMenu() );
 
 		if ( selectionModel != null )
+		{
 			menuBar.add( createSelectionMenu() );
+		}
 
 		if ( selectionColoringModel != null )
 		{
 			menuBar.add( createColoringMenu() );
 			menuBar.add( createAnnotateMenu() );
+			menuBar.add( createClassifyMenu() );
 			menuBar.add( createPlotMenu() );
 		}
 
-
-		// menuBar.add( createMeasureMenu() ); // TODO: finish implementing this
 
 		menuBar.add( createHelpMenu() );
 	}
@@ -366,6 +368,17 @@ public class TableView< T extends TableRow > extends JPanel
 		JMenu menu = new JMenu( "Select" );
 
 		menu.add( createSelectAllMenuItem() );
+
+		return menu;
+	}
+
+	private JMenu createClassifyMenu()
+	{
+		JMenu menu = new JMenu( "Classify" );
+
+		menu.add( createStartNewAnnotationMenuItem() );
+
+		menu.add( createContinueAnnotationMenuItem() );
 
 		return menu;
 	}
@@ -588,6 +601,21 @@ public class TableView< T extends TableRow > extends JPanel
 		return menuItem;
 	}
 
+	private JMenuItem createClassifyMenuItem()
+	{
+		final JMenuItem menuItem = new JMenuItem( "Classify..." );
+
+		menuItem.addActionListener( e ->
+		{
+			if ( new CLIJAvailabilityChecker().isAvailable() )
+			{
+				new ClassifyDialog().showDialog();
+			}
+		} );
+
+		return menuItem;
+	}
+
 	private JMenuItem createContinueAnnotationMenuItem()
 	{
 		final JMenuItem menuItem = new JMenuItem( "Continue annotation..." );
@@ -657,12 +685,13 @@ public class TableView< T extends TableRow > extends JPanel
 		annotator.showDialog();
 	}
 
-	private void createAndShowMenu()
+	private void showMenu( JMenuBar menuBar )
 	{
-		frame = new JFrame( tableName );
-		createMenuBar();
-		frame.setJMenuBar( menuBar );
+		final String appleMenuBarLaf = System.getProperty( "apple.laf.useScreenMenuBar" );
+		System.setProperty("apple.laf.useScreenMenuBar", "false");
 
+		frame = new JFrame( tableName );
+		frame.setJMenuBar( menuBar );
 		this.setOpaque( true );
 		frame.setContentPane( this );
 
@@ -684,6 +713,9 @@ public class TableView< T extends TableRow > extends JPanel
 		//Display the window.
 		frame.pack();
 		SwingUtilities.invokeLater( () -> frame.setVisible( true ) );
+
+		// reset
+		System.setProperty("apple.laf.useScreenMenuBar", appleMenuBarLaf);
 	}
 
 	public void addColumn( String column, Object defaultValue )
@@ -858,6 +890,7 @@ public class TableView< T extends TableRow > extends JPanel
 		Logger.info( "Column used for coloring: " + coloringColumnName );
 		Logger.info( " "  );
 		Logger.info( "Value, R, G, B"  );
+
 
 		for ( T tableRow : tableRows )
 		{
