@@ -91,7 +91,7 @@
 		<bigdataviewer-spimdata-extras.version>0.1.1</bigdataviewer-spimdata-extras.version>
 
 		<!-- EMBL CBA -->
-        <imagej-utils.version>0.6.3</imagej-utils.version>
+        <imagej-utils.version>0.6.4-SNAPSHOT</imagej-utils.version>
 
 		<!-- CLIJ WEKA -->
 		<clijx-weka_.version>0.30.2.0</clijx-weka_.version>
