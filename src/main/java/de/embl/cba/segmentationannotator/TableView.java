@@ -52,7 +52,6 @@ import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
 import ij.gui.GenericDialog;
-import loci.poi.hssf.extractor.ExcelExtractor;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.io.FilenameUtils;
 
@@ -68,6 +67,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static de.embl.cba.tables.FileUtils.selectPathFromProjectOrFileSystem;
 import static de.embl.cba.tables.TableRows.setTableCell;
@@ -84,7 +84,7 @@ public class TableView< T extends TableRow > extends JPanel
     private JScrollPane scrollPane;
     private JMenuBar menuBar;
 
-	private JTable table;
+	private JTable jTable;
 	private int recentlySelectedRowInView;
 	private ColumnColoringModelCreator< T > columnColoringModelCreator;
 	private MeasureDistance< T > measureDistance;
@@ -124,7 +124,7 @@ public class TableView< T extends TableRow > extends JPanel
 		this.tableRows = tableRows;
 
 		// TODO: this should be listening to the TableModel instead
-		//registerAsTableRowListener( tableRows );
+		registerAsTableRowListener( tableRows );
 
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionModel;
@@ -148,12 +148,15 @@ public class TableView< T extends TableRow > extends JPanel
 				@Override
 				public void cellChanged( String columnName, String value )
 				{
-					try
+					synchronized ( jTable )
 					{
-						setTableCell( tableRow.rowIndex(), columnName, value, getTable() ); 	}
-					catch ( Exception e )
-					{
-						// The column may not exist
+						if ( ! Tables.getColumnNames( jTable ).contains( columnName ) )
+						{
+
+							Tables.addColumn( jTable.getModel(), columnName, "None" );
+						}
+
+						setTableCell( tableRow.rowIndex(), columnName, value, getjTable() );
 					}
 				}
 			} );
@@ -187,7 +190,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private void configureTableRowColoring()
 	{
-		table.setDefaultRenderer( Double.class, new DefaultTableCellRenderer()
+		jTable.setDefaultRenderer( Double.class, new DefaultTableCellRenderer()
 		{
 			@Override
 			public Component getTableCellRendererComponent(
@@ -208,7 +211,7 @@ public class TableView< T extends TableRow > extends JPanel
 			}
 		} );
 
-		table.setDefaultRenderer( String.class, new DefaultTableCellRenderer()
+		jTable.setDefaultRenderer( String.class, new DefaultTableCellRenderer()
 		{
 			@Override
 			public Component getTableCellRendererComponent(
@@ -230,7 +233,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 		} );
 
-		table.setDefaultRenderer( Long.class, new DefaultTableCellRenderer()
+		jTable.setDefaultRenderer( Long.class, new DefaultTableCellRenderer()
 		{
 			@Override
 			public Component getTableCellRendererComponent(
@@ -251,7 +254,7 @@ public class TableView< T extends TableRow > extends JPanel
 			}
 		});
 
-		table.setDefaultRenderer( Integer.class, new DefaultTableCellRenderer()
+		jTable.setDefaultRenderer( Integer.class, new DefaultTableCellRenderer()
 		{
 			@Override
 			public Component getTableCellRendererComponent(
@@ -272,7 +275,7 @@ public class TableView< T extends TableRow > extends JPanel
 			}
 		} );
 
-		table.setDefaultRenderer( Object.class, new DefaultTableCellRenderer()
+		jTable.setDefaultRenderer( Object.class, new DefaultTableCellRenderer()
 		{
 			@Override
 			public Component getTableCellRendererComponent(
@@ -296,7 +299,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private Color getColor( int rowInView, int columnInView )
 	{
-		final int row = table.convertRowIndexToModel( rowInView );
+		final int row = jTable.convertRowIndexToModel( rowInView );
 
 //		if ( selectionModel.isFocused( tableRows.getTableRows().get( row ) ) )
 //		{
@@ -319,28 +322,28 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private synchronized void repaintTable()
 	{
-		table.repaint();
+		jTable.repaint();
 	}
 
 	private void configureJTable()
 	{
-		table = Tables.jTableFromTableRows( tableRows );
-		table.setPreferredScrollableViewportSize( new Dimension(500, 200) );
-		table.setFillsViewportHeight( true );
-		table.setAutoCreateRowSorter( true );
-		table.setRowSelectionAllowed( true );
-		table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+		jTable = Tables.jTableFromTableRows( tableRows );
+		jTable.setPreferredScrollableViewportSize( new Dimension(500, 200) );
+		jTable.setFillsViewportHeight( true );
+		jTable.setAutoCreateRowSorter( true );
+		jTable.setRowSelectionAllowed( true );
+		jTable.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 
 		scrollPane = new JScrollPane(
-				table,
+				jTable,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
 		add( scrollPane );
 
-		table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
+		jTable.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
 
-		columnColoringModelCreator = new ColumnColoringModelCreator( table );
+		columnColoringModelCreator = new ColumnColoringModelCreator( jTable );
 
 		updateUI();
 	}
@@ -508,7 +511,7 @@ public class TableView< T extends TableRow > extends JPanel
 						String mergeByColumnName = getMergeByColumnName();
 						String tablePath = selectPathFromProjectOrFileSystem( tablesDirectory, "Table");
 						addAdditionalTable(tablePath);
-						Map< String, List< String > > newColumnsOrdered = TableUIs.loadColumns( table, tablePath, mergeByColumnName );
+						Map< String, List< String > > newColumnsOrdered = TableUIs.loadColumns( jTable, tablePath, mergeByColumnName );
 						if ( newColumnsOrdered == null ) return;
 						newColumnsOrdered.remove( mergeByColumnName );
 						addColumns( newColumnsOrdered );
@@ -525,7 +528,7 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		String aMergeByColumnName;
 		if ( mergeByColumnName == null )
-			aMergeByColumnName = TableUIs.selectColumnNameUI( table, "Merge by " );
+			aMergeByColumnName = TableUIs.selectColumnNameUI( jTable, "Merge by " );
 		else
 			aMergeByColumnName = mergeByColumnName;
 		return aMergeByColumnName;
@@ -572,7 +575,7 @@ public class TableView< T extends TableRow > extends JPanel
 		final JMenuItem menuItem = new JMenuItem( "Save Table as..." );
 		menuItem.addActionListener( e ->
 				SwingUtilities.invokeLater( () ->
-						TableUIs.saveTableUI( table ) ) );
+						TableUIs.saveTableUI( jTable ) ) );
 
 		return menuItem;
 	}
@@ -581,7 +584,7 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		final JMenuItem menuItem = new JMenuItem( "Save Columns as..." );
 		menuItem.addActionListener( e ->
-				SwingUtilities.invokeLater( () -> TableUIs.saveColumns( table ) ) );
+				SwingUtilities.invokeLater( () -> TableUIs.saveColumns( jTable ) ) );
 
 		return menuItem;
 	}
@@ -631,7 +634,7 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		SwingUtilities.invokeLater( () ->
 		{
-			final String annotationColumn = TableUIs.selectColumnNameUI( table, "Annotation column" );
+			final String annotationColumn = TableUIs.selectColumnNameUI( jTable, "Annotation column" );
 			continueAnnotation( annotationColumn );
 		});
 	}
@@ -675,7 +678,7 @@ public class TableView< T extends TableRow > extends JPanel
 		selectionColoringModel.setSelectionColoringMode( SelectionColoringModel.SelectionColoringMode.SelectionColor, 1.0 );
 		selectionColoringModel.setColoringModel( columnNameToColoringModel.get( columnName ) );
 
-		final RowSorter< ? extends TableModel > rowSorter = table.getRowSorter();
+		final RowSorter< ? extends TableModel > rowSorter = jTable.getRowSorter();
 		final Annotator annotator = new Annotator(
 				columnName,
 				tableRows,
@@ -724,13 +727,14 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		if ( getColumnNames().contains( column ) )
 			throw new RuntimeException( column + " exists already, please choose another name." );
-		Tables.addColumn( table.getModel(), column, defaultValue );
+		// Tables.addColumn( jTable.getModel(), column, defaultValue ); // done by listener
+		// TODO: add to TableModel
 		TableRows.addColumn( tableRows, column, defaultValue );
 	}
 
 	public void addColumn( String column, Object[] values )
 	{
-		Tables.addColumn( table.getModel(), column, values );
+		Tables.addColumn( jTable.getModel(), column, values );
 		TableRows.addColumn( tableRows, column, values );
 	}
 
@@ -750,30 +754,30 @@ public class TableView< T extends TableRow > extends JPanel
 		}
 	}
 
-	public List< String > getColumnNames()
+	public Set< String > getColumnNames()
 	{
-		return Tables.getColumnNames( table );
+		return tableRows.get( 0 ).getColumnNames();
 	}
 
-	public JTable getTable()
+	public JTable getjTable()
 	{
-		return table;
+		return jTable;
 	}
 
 	private synchronized void moveToRowInView( int rowInView )
 	{
 		setRecentlySelectedRowInView( rowInView );
 		//table.getSelectionModel().setSelectionInterval( rowInView, rowInView );
-		final Rectangle visibleRect = table.getVisibleRect();
-		final Rectangle cellRect = table.getCellRect( rowInView, 0, true );
+		final Rectangle visibleRect = jTable.getVisibleRect();
+		final Rectangle cellRect = jTable.getCellRect( rowInView, 0, true );
 		visibleRect.y = cellRect.y;
-		table.scrollRectToVisible( visibleRect );
-		table.repaint();
+		jTable.scrollRectToVisible( visibleRect );
+		jTable.repaint();
 	}
 
 	public void installSelectionModelNotification()
 	{
-		table.addMouseListener( new MouseAdapter()
+		jTable.addMouseListener( new MouseAdapter()
 		{
 			@Override
 			public void mouseClicked( MouseEvent e )
@@ -782,14 +786,14 @@ public class TableView< T extends TableRow > extends JPanel
 			}
 		} );
 
-		table.getSelectionModel().addListSelectionListener( e ->
+		jTable.getSelectionModel().addListSelectionListener( e ->
 			SwingUtilities.invokeLater( () ->
 			{
 				if ( selectionMode.equals( SelectionMode.None ) ) return;
 
 				if ( e.getValueIsAdjusting() ) return;
 
-				final int selectedRowInView = table.getSelectedRow();
+				final int selectedRowInView = jTable.getSelectedRow();
 
 				if ( selectedRowInView == -1 ) return;
 
@@ -797,7 +801,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 				setRecentlySelectedRowInView( selectedRowInView );
 
-				final int row = table.convertRowIndexToModel( recentlySelectedRowInView );
+				final int row = jTable.convertRowIndexToModel( recentlySelectedRowInView );
 
 				final T object = tableRows.get( row );
 
@@ -827,7 +831,7 @@ public class TableView< T extends TableRow > extends JPanel
 				if ( selectionModel.isEmpty() )
 				{
 					setRecentlySelectedRowInView( -1 );
-					table.getSelectionModel().clearSelection();
+					jTable.getSelectionModel().clearSelection();
 				}
 				SwingUtilities.invokeLater( () -> repaintTable() );
 			}
@@ -847,7 +851,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private synchronized void moveToSelectedTableRow( TableRow selection )
 	{
-		final int rowInView = table.convertRowIndexToView( selection.rowIndex() );
+		final int rowInView = jTable.convertRowIndexToView( selection.rowIndex() );
 
 		if ( rowInView == recentlySelectedRowInView ) return;
 
