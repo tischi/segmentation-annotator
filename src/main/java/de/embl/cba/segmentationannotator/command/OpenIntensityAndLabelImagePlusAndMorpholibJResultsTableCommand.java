@@ -75,6 +75,8 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 	@Parameter ( label = "MorpholibJ results table title" )
 	public String resultsTableTitle;
 
+	private List< TableRowImageSegment > tableRowImageSegments;
+
 	@Override
 	public void run()
 	{
@@ -86,15 +88,20 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 		// create table
 		final ResultsTableFetcher tableFetcher = new ResultsTableFetcher();
 		ResultsTable resultsTable = tableFetcher.fetch( resultsTableTitle );
-		final List< TableRowImageSegment > tableRowImageSegments = createMLJTableRowImageSegments( resultsTable, labelImageId );
+		tableRowImageSegments = createMLJTableRowImageSegments( resultsTable, labelImageId );
 
 		// view
 		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
 	}
 
+	public List< TableRowImageSegment > getTableRowImageSegments()
+	{
+		return tableRowImageSegments;
+	}
+
 	private List< TableRowImageSegment > createMLJTableRowImageSegments( ResultsTable resultsTable, String labelImageId )
 	{
-		Map< String, List< String > > columns = TableColumns.columnsFromImageJ1ResultsTable( resultsTable );
+		Map< String, List< String > > columns = TableColumns.convertResultsTableToColumns( resultsTable );
 
 		columns = TableColumns.addLabelImageIdColumn(
 				columns,

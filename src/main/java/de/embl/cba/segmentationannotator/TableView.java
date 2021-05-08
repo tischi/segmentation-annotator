@@ -52,6 +52,7 @@ import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
 import ij.gui.GenericDialog;
+import loci.poi.hssf.extractor.ExcelExtractor;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.io.FilenameUtils;
 
@@ -122,7 +123,8 @@ public class TableView< T extends TableRow > extends JPanel
 		super( new GridLayout(1, 0 ) );
 		this.tableRows = tableRows;
 
-		registerAsTableRowListener( tableRows );
+		// TODO: this should be listening to the TableModel instead
+		//registerAsTableRowListener( tableRows );
 
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionModel;
@@ -146,7 +148,13 @@ public class TableView< T extends TableRow > extends JPanel
 				@Override
 				public void cellChanged( String columnName, String value )
 				{
-					setTableCell( tableRow.rowIndex(), columnName, value, getTable() );
+					try
+					{
+						setTableCell( tableRow.rowIndex(), columnName, value, getTable() ); 	}
+					catch ( Exception e )
+					{
+						// The column may not exist
+					}
 				}
 			} );
 		}
