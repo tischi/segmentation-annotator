@@ -1,13 +1,14 @@
 import de.embl.cba.segmentationannotator.classify.WekaClassifier;
 import de.embl.cba.segmentationannotator.command.OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand;
-import de.embl.cba.tables.DefaultTableModel;
+import de.embl.cba.tables.tablerow.DefaultTableRowsModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.IJ;
 import net.imagej.ImageJ;
 import weka.classifiers.Classifier;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TestClassification
 {
@@ -29,27 +30,27 @@ public class TestClassification
 
 		final List< TableRowImageSegment > imageSegments = command.getTableRowImageSegments();
 
-		final DefaultTableModel< TableRowImageSegment > tableModel = new DefaultTableModel<>( imageSegments );
+		final DefaultTableRowsModel< TableRowImageSegment > tableRowsModel = new DefaultTableRowsModel<>( imageSegments );
 
 		int rowIndex = 0;
 		final String annotationColumn = "Annotation";
-		tableModel.addColumn( annotationColumn );
-		tableModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
-		tableModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
-		tableModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
-		tableModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
-		tableModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
-		tableModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
+		tableRowsModel.addColumn( annotationColumn );
+		tableRowsModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
+		tableRowsModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
+		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
+		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
+		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
+		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
 
 		final WekaClassifier wekaClassifier = new WekaClassifier();
 
-		final ArrayList< String > features = new ArrayList<>();
+		final Set< String > features = new HashSet<>();
 		features.add( "Golgi_Count" );
 		features.add( "Golgi_Mean_Area" );
-		final Classifier classifier = wekaClassifier.trainClassifier( tableModel, features, annotationColumn );
-		wekaClassifier.predict( tableModel, features, annotationColumn, "Prediction", classifier );
+		final Classifier classifier = wekaClassifier.trainClassifier( tableRowsModel, features, annotationColumn );
+		wekaClassifier.predict( tableRowsModel, features, annotationColumn, "Prediction", classifier );
 
-		for ( TableRowImageSegment tableRowImageSegment : tableModel )
+		for ( TableRowImageSegment tableRowImageSegment : tableRowsModel )
 		{
 			System.out.println( tableRowImageSegment.getCell( "Prediction" ) );
 		}

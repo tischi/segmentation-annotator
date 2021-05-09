@@ -32,11 +32,12 @@ import bdv.tools.HelpDialog;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
 import de.embl.cba.segmentationannotator.annotate.Annotator;
 import de.embl.cba.segmentationannotator.classify.ClassifyDialog;
+import de.embl.cba.segmentationannotator.classify.WekaClassifier;
 import de.embl.cba.tables.Logger;
 import de.embl.cba.tables.TableColumns;
-import de.embl.cba.tables.TableRows;
 import de.embl.cba.tables.TableUIs;
 import de.embl.cba.tables.Tables;
+import de.embl.cba.tables.Utils;
 import de.embl.cba.tables.color.CategoryTableRowColumnColoringModel;
 import de.embl.cba.tables.color.ColorUtils;
 import de.embl.cba.tables.color.ColoringModel;
@@ -49,10 +50,15 @@ import de.embl.cba.tables.plot.ScatterPlotDialog;
 import de.embl.cba.tables.plot.TableRowsScatterPlot;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
+import de.embl.cba.tables.tablerow.DefaultTableRowsModel;
+import de.embl.cba.tables.tablerow.JTableFromTableRowsModelCreator;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
+import de.embl.cba.tables.tablerow.TableRows;
+import de.embl.cba.tables.tablerow.TableRowsModel;
 import ij.gui.GenericDialog;
 import net.imglib2.type.numeric.ARGBType;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.activation.UnsupportedDataTypeException;
@@ -70,12 +76,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static de.embl.cba.tables.FileUtils.selectPathFromProjectOrFileSystem;
-import static de.embl.cba.tables.TableRows.setTableCell;
 import static de.embl.cba.tables.color.CategoryTableRowColumnColoringModel.DARK_GREY;
+import static de.embl.cba.tables.tablerow.TableRows.setTableCell;
 
 public class TableView< T extends TableRow > extends JPanel
 {
-	private final List< T > tableRows;
+	private final TableRowsModel< T > tableRowsModel;
 	private final SelectionModel< T > selectionModel;
 	private final SelectionColoringModel< T > selectionColoringModel;
 	private final String tableName;
@@ -105,30 +111,27 @@ public class TableView< T extends TableRow > extends JPanel
 		ToggleSelectionAndFocusIfSelected
 	}
 
-	// TODO: clean this up for what is really needed
 	public TableView(
 			final List< T > tableRows,
 			final SelectionModel< T > selectionModel,
 			final SelectionColoringModel< T > selectionColoringModel )
 	{
-		this( tableRows, selectionModel, selectionColoringModel, "" );
+		this( new DefaultTableRowsModel<>( tableRows ), selectionModel, selectionColoringModel );
 	}
 
 	public TableView(
-			final List< T > tableRows,
+			final TableRowsModel< T > tableRowsModel,
 			final SelectionModel< T > selectionModel,
-			final SelectionColoringModel< T > selectionColoringModel,
-			String tableName )
+			final SelectionColoringModel< T > selectionColoringModel )
 	{
 		super( new GridLayout(1, 0 ) );
-		this.tableRows = tableRows;
+		this.tableRowsModel = tableRowsModel;
 
-		// TODO: this should be listening to the TableModel instead
-		registerAsTableRowListener( tableRows );
+		registerAsTableRowsChangedListener( tableRowsModel );
 
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionModel;
-		this.tableName = tableName;
+		this.tableName = "";
 		this.recentlySelectedRowInView = -1;
 		this.additionalTables = new ArrayList<>();
 
@@ -139,9 +142,9 @@ public class TableView< T extends TableRow > extends JPanel
 			registerAsColoringListener( selectionColoringModel );
 	}
 
-	public void registerAsTableRowListener( List< T > tableRows )
+	private void registerAsTableRowsChangedListener( TableRowsModel< T > tableModel )
 	{
-		for ( T tableRow : tableRows )
+		for ( T tableRow : tableModel )
 		{
 			tableRow.listeners().add( new TableRowListener()
 			{
@@ -152,20 +155,27 @@ public class TableView< T extends TableRow > extends JPanel
 					{
 						if ( ! Tables.getColumnNames( jTable ).contains( columnName ) )
 						{
-
-							Tables.addColumn( jTable.getModel(), columnName, "None" );
+							addColumnToJTable( columnName, value );
 						}
 
-						setTableCell( tableRow.rowIndex(), columnName, value, getjTable() );
+						setTableCell( tableModel.indexOf( tableRow ), columnName, value, getjTable() );
 					}
 				}
 			} );
 		}
 	}
 
-	public List< T > getTableRows()
+	private void addColumnToJTable( String columnName, String value )
 	{
-		return tableRows;
+		try
+		{
+			Utils.parseDouble( value );
+			Tables.addColumn( jTable.getModel(), columnName, 0.0D );
+		}
+		catch ( Exception e )
+		{
+			Tables.addColumn( jTable.getModel(), columnName, "None" );
+		}
 	}
 
 	public void showTableAndMenu( Component parentComponent )
@@ -307,7 +317,7 @@ public class TableView< T extends TableRow > extends JPanel
 //		}
 
 		final ARGBType argbType = new ARGBType();
-		selectionColoringModel.convert( tableRows.get( row ), argbType );
+		selectionColoringModel.convert( tableRowsModel.getRow( row ), argbType );
 
 		if ( ARGBType.alpha( argbType.get() ) == 0 )
 			return Color.WHITE;
@@ -327,7 +337,8 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private void configureJTable()
 	{
-		jTable = Tables.jTableFromTableRows( tableRows );
+		jTable = new JTableFromTableRowsModelCreator( tableRowsModel ).createJTable();
+
 		jTable.setPreferredScrollableViewportSize( new Dimension(500, 200) );
 		jTable.setFillsViewportHeight( true );
 		jTable.setAutoCreateRowSorter( true );
@@ -354,30 +365,16 @@ public class TableView< T extends TableRow > extends JPanel
 		menuBar = new JMenuBar();
 		menuBar.add( createTableMenu() );
 
-		if ( selectionModel != null )
-		{
-			menuBar.add( createSelectionMenu() );
-		}
-
 		if ( selectionColoringModel != null )
 		{
 			menuBar.add( createColoringMenu() );
 			menuBar.add( createAnnotateMenu() );
 			menuBar.add( createClassifyMenu() );
-			menuBar.add( createPlotMenu() );
+			// menuBar.add( createPlotMenu() ); // TODO: work on table model
 		}
 
 
 		menuBar.add( createHelpMenu() );
-	}
-
-	private JMenu createSelectionMenu()
-	{
-		JMenu menu = new JMenu( "Select" );
-
-		menu.add( createSelectAllMenuItem() );
-
-		return menu;
 	}
 
 	private JMenu createClassifyMenu()
@@ -448,7 +445,8 @@ public class TableView< T extends TableRow > extends JPanel
 
 					if ( dialog.show() )
 					{
-						TableRowsScatterPlot< T > scatterPlot = new TableRowsScatterPlot<>( tableRows, selectionColoringModel, dialog.getSelectedColumns(), dialog.getScaleFactors(), dialog.getDotSizeScaleFactor() );
+						// TODO: Scatter plot on tableModel!
+						TableRowsScatterPlot< T > scatterPlot = new TableRowsScatterPlot<>( IteratorUtils.toList( tableRowsModel.iterator() ), selectionColoringModel, dialog.getSelectedColumns(), dialog.getScaleFactors(), dialog.getDotSizeScaleFactor() );
 						scatterPlot.show( null );
 					}
 				});
@@ -588,17 +586,6 @@ public class TableView< T extends TableRow > extends JPanel
 		return menuItem;
 	}
 
-	private JMenuItem createSelectAllMenuItem()
-	{
-		final JMenuItem menuItem = new JMenuItem( "Select all" );
-
-		menuItem.addActionListener( e ->
-				SwingUtilities.invokeLater( () ->
-						selectAll() ) );
-
-		return menuItem;
-	}
-
 	private JMenuItem createStartNewAnnotationMenuItem()
 	{
 		final JMenuItem menuItem = new JMenuItem( "Start new annotation..." );
@@ -614,7 +601,12 @@ public class TableView< T extends TableRow > extends JPanel
 
 		menuItem.addActionListener( e ->
 		{
-			new ClassifyDialog( getColumnNames() ).showDialog();
+			final ClassifyDialog dialog = new ClassifyDialog( () -> getColumnNames() );
+			if ( ! dialog.show() ) return; // cancelled
+
+			final WekaClassifier classifier = new WekaClassifier();
+			classifier.trainClassifier( tableRowsModel, dialog.getFeatureColumns(), dialog.getAnnotationColumn() );
+
 		} );
 
 		return menuItem;
@@ -638,32 +630,20 @@ public class TableView< T extends TableRow > extends JPanel
 		});
 	}
 
-	private void selectAll()
-	{
-		selectionModel.setSelected( tableRows, true );
-//		for ( T tableRow : tableRows )
-//		{
-//			selectionModel.setSelected( tableRow, true );
-//			selectionModel.focus( tableRow );
-//		}
-
-	}
-
 	// TODO: Move to annotate package
 	public void showNewAnnotationDialog()
 	{
 		final GenericDialog gd = new GenericDialog( "" );
-		gd.addStringField( "Annotation column name", "", 30 );
+		gd.addStringField( "Annotation column name", "Annotation", 30 );
 		gd.showDialog();
 		if( gd.wasCanceled() ) return;
 		final String columnName = gd.getNextString();
 		if ( getColumnNames().contains( columnName ) )
 		{
-			Logger.error( "\"" +columnName + "\" exists already as a column name, please choose another one." );
+			Logger.error( "The column \"" +columnName + "\" exists already, please choose another one." );
 			return;
 		}
-		this.addColumn( columnName, "None" );
-
+		tableRowsModel.addColumn( columnName, "None" );
 		continueAnnotation( columnName );
 	}
 
@@ -681,7 +661,7 @@ public class TableView< T extends TableRow > extends JPanel
 		final RowSorter< ? extends TableModel > rowSorter = jTable.getRowSorter();
 		final Annotator annotator = new Annotator(
 				columnName,
-				tableRows,
+				tableRowsModel,
 				selectionColoringModel.getSelectionModel(),
 				columnNameToColoringModel.get( columnName ),
 				rowSorter
@@ -723,40 +703,17 @@ public class TableView< T extends TableRow > extends JPanel
 		System.setProperty("apple.laf.useScreenMenuBar", appleMenuBarLaf);
 	}
 
-	public void addColumn( String column, Object defaultValue )
-	{
-		if ( getColumnNames().contains( column ) )
-			throw new RuntimeException( column + " exists already, please choose another name." );
-		// Tables.addColumn( jTable.getModel(), column, defaultValue ); // done by listener
-		// TODO: add to TableModel
-		TableRows.addColumn( tableRows, column, defaultValue );
-	}
-
-	public void addColumn( String column, Object[] values )
-	{
-		Tables.addColumn( jTable.getModel(), column, values );
-		TableRows.addColumn( tableRows, column, values );
-	}
-
 	public void addColumns( Map< String, List< String > > columns )
 	{
 		for ( String columnName : columns.keySet() )
 		{
-			try
-			{
-				final Object[] values = TableColumns.asTypedArray( columns.get( columnName ) );
-				addColumn( columnName, values );
-			} catch ( UnsupportedDataTypeException e )
-			{
-				Logger.error( "Could not add column " + columnName + ", because the" +
-						" data type could not be determined.");
-			}
+			tableRowsModel.addColumn( columnName, columns.get( columnName ) );
 		}
 	}
 
 	public Set< String > getColumnNames()
 	{
-		return tableRows.get( 0 ).getColumnNames();
+		return tableRowsModel.getColumnNames();
 	}
 
 	public JTable getjTable()
@@ -803,7 +760,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 				final int row = jTable.convertRowIndexToModel( recentlySelectedRowInView );
 
-				final T object = tableRows.get( row );
+				final T object = tableRowsModel.getRow( row );
 
 				selectionMode = controlDown ? SelectionMode.ToggleSelectionAndFocusIfSelected : SelectionMode.FocusOnly;
 
@@ -898,7 +855,7 @@ public class TableView< T extends TableRow > extends JPanel
 		Logger.info( "Value, R, G, B"  );
 
 
-		for ( T tableRow : tableRows )
+		for ( T tableRow : tableRowsModel )
 		{
 			final String value = tableRow.getCell( coloringColumnName );
 

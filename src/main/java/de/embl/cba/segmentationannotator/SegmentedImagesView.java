@@ -343,7 +343,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		actions.add( installStartNewAnnotationBehaviour() );
 		actions.add( installContinueAnnotationBehaviour() );
 		actions.add( installConfigureLabelMaskDisplayBehaviour() );
-		actions.add( installReportIssueBehaviour() );
+		//actions.add( installReportIssueBehaviour() );
 		//addMoveToPopupMenu();
 		//addAnimationSettingsPopupMenu();
 
@@ -470,12 +470,12 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		return actionName;
 	}
 
-	private String installReportIssueBehaviour()
-	{
-		final String actionName = "Report an Issue...";
-		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
-		return actionName;
-	}
+//	private String installReportIssueBehaviour()
+//	{
+//		final String actionName = "Report an Issue...";
+//		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
+//		return actionName;
+//	}
 
 	private void addMoveToPopupMenu()
 	{
@@ -599,41 +599,41 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void reportIssueDialog()
 	{
-		final RealPoint location = new RealPoint( 3 );
-		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( location );
-
-		GenericDialog gd = new GenericDialog( "Report issue" );
-		gd.addTextAreas( "", null, 5, 60 );
-
-		T segment = getSegmentAtMouseCoordinates();
-		if ( segment != null && segment instanceof TableRow )
-			gd.addCheckbox( "Add issue to image segment in table", true );
-
-		gd.showDialog();
-		if ( gd.wasCanceled() ) return;
-
-		IJ.log( "### Issue");
-		IJ.log( "Location (x,y,z,t):" );
-		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
-		IJ.log( "Issue:" );
-		String issue = gd.getNextText();
-		IJ.log( issue );
-
-		// TODO: below is a mess! Think of better separation of concerns
-		//  Maybe an image segment needs to have option to have more fields?
-		//  Such as Annotation and Issue? Or maybe a featureMap?!
-		if ( segment != null && segment instanceof TableRow && gd.getNextBoolean() )
-		{
-			if ( tableView != null )
-			{
-				if ( ! tableView.getColumnNames().contains( "Issue" ) )
-				{
-					tableView.addColumn( "Issue", "None" );
-				}
-			}
-
-			((TableRow) segment).setCell( "Issue", issue );
-		}
+//		final RealPoint location = new RealPoint( 3 );
+//		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( location );
+//
+//		GenericDialog gd = new GenericDialog( "Report issue" );
+//		gd.addTextAreas( "", null, 5, 60 );
+//
+//		T segment = getSegmentAtMouseCoordinates();
+//		if ( segment != null && segment instanceof TableRow )
+//			gd.addCheckbox( "Add issue to image segment in table", true );
+//
+//		gd.showDialog();
+//		if ( gd.wasCanceled() ) return;
+//
+//		IJ.log( "### Issue");
+//		IJ.log( "Location (x,y,z,t):" );
+//		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
+//		IJ.log( "Issue:" );
+//		String issue = gd.getNextText();
+//		IJ.log( issue );
+//
+//		// TODO: below is a mess! Think of better separation of concerns
+//		//  Maybe an image segment needs to have option to have more fields?
+//		//  Such as Annotation and Issue? Or maybe a featureMap?!
+//		if ( segment != null && segment instanceof TableRow && gd.getNextBoolean() )
+//		{
+//			if ( tableView != null )
+//			{
+//				if ( ! tableView.getColumnNames().contains( "Issue" ) )
+//				{
+//					tableView.addColumn( "Issue", "None" );
+//				}
+//			}
+//
+//			((TableRow) segment).setCell( "Issue", issue );
+//		}
 	}
 
 	private synchronized void selectNone()
