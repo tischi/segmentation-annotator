@@ -384,9 +384,7 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		JMenu menu = new JMenu( "Classify" );
 
-		menu.add( createStartNewAnnotationMenuItem() );
-
-		menu.add( createContinueAnnotationMenuItem() );
+		menu.add( createClassifyMenuItem() );
 
 		return menu;
 	}
@@ -416,6 +414,7 @@ public class TableView< T extends TableRow > extends JPanel
 		JMenu menu = new JMenu( "Help" );
 
 		menu.add( createShowSegmentationHelpMenuItem() );
+
 		menu.add( createShowNavigationHelpMenuItem() );
 
 		return menu;
@@ -615,7 +614,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 		menuItem.addActionListener( e ->
 		{
-			new ClassifyDialog().showDialog();
+			new ClassifyDialog( getColumnNames() ).showDialog();
 		} );
 
 		return menuItem;
@@ -650,6 +649,7 @@ public class TableView< T extends TableRow > extends JPanel
 
 	}
 
+	// TODO: Move to annotate package
 	public void showNewAnnotationDialog()
 	{
 		final GenericDialog gd = new GenericDialog( "" );
