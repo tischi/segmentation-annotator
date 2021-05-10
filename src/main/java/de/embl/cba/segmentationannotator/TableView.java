@@ -629,6 +629,7 @@ public class TableView< T extends TableRow > extends JPanel
 		SwingUtilities.invokeLater( () ->
 		{
 			final String annotationColumn = TableUIs.selectColumnNameUI( jTable, "Annotation column" );
+			if ( annotationColumn == null ) return;
 			continueAnnotation( annotationColumn );
 		});
 	}

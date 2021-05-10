@@ -45,7 +45,7 @@ public class WekaClassifier < T extends TableRow >
 			final String annotation = tableRow.getCell( annotationColumn );
 			if ( annotation.equals( "None" ) ) continue;
 
-			final DenseInstance instance = createTrainingInstance( attributes, annotationColumn, tableRow );
+			final DenseInstance instance = createTrainingInstance( tableRow );
 
 			trainingInstances.add( instance );
 		}
@@ -118,15 +118,14 @@ public class WekaClassifier < T extends TableRow >
 		return annotations;
 	}
 
-	private < T extends TableRow > DenseInstance createTrainingInstance( ArrayList< Attribute > attributes, String annotationColumn, T tableRow )
+	private < T extends TableRow > DenseInstance createTrainingInstance( T tableRow )
 	{
 		final int numAttributes = attributes.size();
-
 		final double[] doubles = new double[ numAttributes ];
 
 		// class
 		final String annotation = tableRow.getCell( annotationColumn );
-		doubles[ numAttributes - 1 ] = attributes.indexOf( annotation );
+		doubles[ numAttributes - 1 ] = annotations.indexOf( annotation );
 
 		// features
 		for ( int i = 0; i < numAttributes - 1; i++ )
@@ -142,7 +141,7 @@ public class WekaClassifier < T extends TableRow >
 	private < T extends TableRow > void setReusablePredictionInstance( List< Attribute > attributes, T tableRow, ReusableDenseInstance reusableDenseInstance )
 	{
 		final int numAttributes = attributes.size();
-		// the first is the class attribute, which will be predicted
+		// the last value stays empty for the prediction
 		for ( int i = 0; i < numAttributes - 1; i++ )
 		{
 			reusableDenseInstance.setValue( i, Double.parseDouble( tableRow.getCell( attributes.get( i ).name() ) )  );
