@@ -18,20 +18,26 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class WekaClassifier
+public class WekaClassifier < T extends TableRow >
 {
-	public < T extends TableRow > Classifier trainClassifier( TableRowsModel< T > tableRowsModel, Set< String > featureColumns, String annotationColumn )
+	private final TableRowsModel< T > tableRowsModel;
+	private final Set< String > featureColumns;
+	private final String annotationColumn;
+	private final ArrayList< Attribute > attributes;
+	private final List< String > annotations;
+
+	public WekaClassifier( TableRowsModel< T > tableRowsModel, Set< String > featureColumns, String annotationColumn )
 	{
-		final List< String > annotations = getAnnotations( tableRowsModel, annotationColumn );
-		ArrayList< Attribute > attributes = createAttributes( featureColumns );
-		attributes.add( new Attribute( "annotations", annotations ) );
+		this.tableRowsModel = tableRowsModel;
+		this.featureColumns = featureColumns;
+		this.annotationColumn = annotationColumn;
 
-		final HashMap< String, Integer > annotationToIndex = new HashMap<>();
-		for ( int i = 0; i < annotations.size(); i++ )
-		{
-			annotationToIndex.put( annotations.get( i ), i );
-		}
+		annotations = getSortedAnnotations( tableRowsModel, annotationColumn );
+		attributes = createSortedAttributes( featureColumns, annotations );
+	}
 
+	public Classifier train()
+	{
 		Instances trainingInstances = new Instances( "train", attributes, 1 );
 		for ( T tableRow : tableRowsModel )
 		{
@@ -39,11 +45,11 @@ public class WekaClassifier
 			final String annotation = tableRow.getCell( annotationColumn );
 			if ( annotation.equals( "None" ) ) continue;
 
-			final DenseInstance instance = createTrainingInstance( attributes, annotationColumn, annotationToIndex, tableRow );
+			final DenseInstance instance = createTrainingInstance( attributes, annotationColumn, tableRow );
 
 			trainingInstances.add( instance );
 		}
-		trainingInstances.setClassIndex( featureColumns.size() );
+		trainingInstances.setClassIndex( attributes.size() - 1 );
 
 		// Train
 		final FastRandomForest randomForest = new FastRandomForest();
@@ -54,50 +60,57 @@ public class WekaClassifier
 		catch ( Exception e )
 		{
 			e.printStackTrace();
+			throw new RuntimeException( "Could not build the classifier." );
 		}
 		return randomForest;
 	}
 
+	public void predict( String predictionColumn, Classifier classifier )
+	{
+		Instances instances = new Instances( "predict", attributes, 1 );
+		final ReusableDenseInstance reusableInstance = new ReusableDenseInstance( 1.0, new double[ attributes.size() ] );
+		reusableInstance.setDataset( instances );
+		instances.setClassIndex( attributes.size() - 1 );
+
+		// predict
+		try
+		{
+			tableRowsModel.addColumn( predictionColumn, "None" );
+			for ( T tableRow : tableRowsModel )
+			{
+				setReusablePredictionInstance( attributes, tableRow, reusableInstance );
+				final double predictionValue = classifier.classifyInstance( reusableInstance );
+				final String prediction = reusableInstance.classAttribute().value( ( int ) predictionValue );
+				tableRow.setCell( predictionColumn, prediction );
+			}
+		}
+		catch ( Exception e )
+		{
+			e.printStackTrace();
+			throw new RuntimeException("Error during classification");
+		}
+	}
+
 	@NotNull
-	private ArrayList< Attribute > createAttributes( Collection< String > featureColumns )
+	private ArrayList< Attribute > createSortedAttributes( Collection< String > featureColumns, List< String > annotations )
 	{
 		final List< String > sortedFeatureColumns = new ArrayList<>( featureColumns );
 		Collections.sort( sortedFeatureColumns );
 
 		ArrayList< Attribute > attributes = new ArrayList< Attribute >();
-
 		for ( String feature : sortedFeatureColumns )
 		{
 			attributes.add( new Attribute( feature ) );
 		}
+		attributes.add( new Attribute( "class", annotations ) );
 
 		return attributes;
 	}
 
-	public < T extends TableRow > void predict( TableRowsModel< T > tableRowsModel, Set< String > featureColumns, String annotationColumn, String predictionColumn, Classifier classifier ) throws Exception
-	{
-		tableRowsModel.addColumn( predictionColumn );
 
-		final List< String > annotations = getAnnotations( tableRowsModel, annotationColumn );
-		ArrayList< Attribute > attributes = createAttributes( featureColumns );
-		attributes.add( new Attribute( "predictions", annotations ) );
-
-		Instances instances = new Instances( "predict", attributes, 1 );
-		final ReusableDenseInstance reusableInstance = new ReusableDenseInstance( 1.0, new double[featureColumns.size() + 1] );
-		reusableInstance.setDataset( instances );
-		instances.setClassIndex( featureColumns.size() );
-
-		for ( T tableRow : tableRowsModel )
-		{
-			setReusablePredictionInstance( attributes, tableRow, reusableInstance );
-			final double predictionValue = classifier.classifyInstance( reusableInstance );
-			final String prediction = reusableInstance.classAttribute().value( (int) predictionValue );
-			tableRow.setCell( predictionColumn, prediction );
-		}
-	}
 
 	@NotNull
-	private < T extends TableRow > List< String > getAnnotations( TableRowsModel< T > tableRowsModel, String annotationColumn )
+	private < T extends TableRow > List< String > getSortedAnnotations( TableRowsModel< T > tableRowsModel, String annotationColumn )
 	{
 		final List< String > annotations = new ArrayList<>( new LinkedHashSet<>( tableRowsModel.getColumn( annotationColumn ) ) );
 		annotations.remove( "None" );
@@ -105,28 +118,32 @@ public class WekaClassifier
 		return annotations;
 	}
 
-	private < T extends TableRow > DenseInstance createTrainingInstance( ArrayList< Attribute > attributes, String annotationColumn, HashMap< String, Integer > annotationToIndex, T tableRow )
+	private < T extends TableRow > DenseInstance createTrainingInstance( ArrayList< Attribute > attributes, String annotationColumn, T tableRow )
 	{
-		// feature values
 		final int numAttributes = attributes.size();
-		// allocate one extra space for the class annotation,s
-		final double[] doubles = new double[ numAttributes + 1 ];
-		for ( int i = 0; i < numAttributes; i++ )
+
+		final double[] doubles = new double[ numAttributes ];
+
+		// class
+		final String annotation = tableRow.getCell( annotationColumn );
+		doubles[ numAttributes - 1 ] = attributes.indexOf( annotation );
+
+		// features
+		for ( int i = 0; i < numAttributes - 1; i++ )
 		{
 			doubles[ i ] = Double.parseDouble( tableRow.getCell( attributes.get( i ).name() ) );
 		}
 
-		// class index
-		doubles[ doubles.length - 1 ] = annotationToIndex.get( tableRow.getCell( annotationColumn ) );
-
 		final DenseInstance instance = new DenseInstance( 1.0, doubles );
+
 		return instance;
 	}
 
 	private < T extends TableRow > void setReusablePredictionInstance( List< Attribute > attributes, T tableRow, ReusableDenseInstance reusableDenseInstance )
 	{
-		final int size = attributes.size();
-		for ( int i = 0; i < size; i++ )
+		final int numAttributes = attributes.size();
+		// the first is the class attribute, which will be predicted
+		for ( int i = 0; i < numAttributes - 1; i++ )
 		{
 			reusableDenseInstance.setValue( i, Double.parseDouble( tableRow.getCell( attributes.get( i ).name() ) )  );
 		}

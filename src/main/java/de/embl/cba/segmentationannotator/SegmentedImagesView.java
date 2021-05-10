@@ -52,9 +52,7 @@ import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
-import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import ij.IJ;
 import ij.gui.GenericDialog;
 import net.imglib2.RealPoint;
 import net.imglib2.img.array.ArrayImg;
@@ -381,7 +379,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private String installStartNewAnnotationBehaviour()
 	{
 		final String actionName = "Start New Annotation...";
-		sacService.registerAction( actionName, sourceAndConverters -> {tableView.showNewAnnotationDialog();}  );
+		sacService.registerAction( actionName, sourceAndConverters -> {
+			tableView.showNewAnnotationDialog();}  );
 		return actionName;
 	}
 
@@ -550,8 +549,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void shuffleRandomColors()
 	{
-		if ( ! isLabelSourceActive() ) return;
-
 		final ColoringModel< T > coloringModel = selectionColoringModel.getColoringModel();
 
 		if ( coloringModel instanceof CategoryColoringModel )
@@ -638,8 +635,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void selectNone()
 	{
-		if ( ! isLabelSourceActive() ) return;
-
 		selectionModel.clearSelection( );
 
 		BdvUtils.repaint( bdvHandle );
@@ -675,39 +670,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 			recentFocus = segment;
 			selectionModel.focus( segment );
 		}
-	}
-
-//	public void select( List< Double > labelIds )
-//	{
-//		List< T > segments = getSegments( labelIds );
-//
-//		selectionModel.setSelected( segments, true );
-//	}
-//
-//	private List< T > getSegments( List< Double > labelIds )
-//	{
-//		final String labelImageId = labelsSource.metadata().imageId;
-//
-//		ArrayList< T > segments = new ArrayList<>(  );
-//
-//		for ( Double labelId : labelIds )
-//		{
-//			final LabelFrameAndImage labelFrameAndImage =
-//					new LabelFrameAndImage( labelId, getCurrentTimePoint(), labelImageId );
-//
-//			segments.add( labelFrameAndImageToSegment.get( labelFrameAndImage ) );
-//		}
-//		return segments;
-//	}
-
-	private boolean isLabelSourceActive()
-	{
-		return true;
-//		final Source< R > source = labelsSource.metadata().bdvStackSource.getSources().get( 0 ).getSpimSource();
-//
-//		final boolean active = BdvUtils.isActive( bdvHandle, source );
-//
-//		return active;
 	}
 
 	private Set< SourceAndConverter< R > > getLabelSources()

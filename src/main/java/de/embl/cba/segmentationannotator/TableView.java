@@ -30,11 +30,11 @@ package de.embl.cba.segmentationannotator;
 
 import bdv.tools.HelpDialog;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
+import de.embl.cba.segmentationannotator.annotate.AnnotationColumnNameSelectionDialog;
 import de.embl.cba.segmentationannotator.annotate.Annotator;
 import de.embl.cba.segmentationannotator.classify.ClassifyDialog;
 import de.embl.cba.segmentationannotator.classify.WekaClassifier;
 import de.embl.cba.tables.Logger;
-import de.embl.cba.tables.TableColumns;
 import de.embl.cba.tables.TableUIs;
 import de.embl.cba.tables.Tables;
 import de.embl.cba.tables.Utils;
@@ -54,14 +54,12 @@ import de.embl.cba.tables.tablerow.DefaultTableRowsModel;
 import de.embl.cba.tables.tablerow.JTableFromTableRowsModelCreator;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowListener;
-import de.embl.cba.tables.tablerow.TableRows;
 import de.embl.cba.tables.tablerow.TableRowsModel;
-import ij.gui.GenericDialog;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
+import weka.classifiers.Classifier;
 
-import javax.activation.UnsupportedDataTypeException;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
@@ -76,8 +74,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static de.embl.cba.tables.FileUtils.selectPathFromProjectOrFileSystem;
+import static de.embl.cba.tables.TableRows.setTableCell;
 import static de.embl.cba.tables.color.CategoryTableRowColumnColoringModel.DARK_GREY;
-import static de.embl.cba.tables.tablerow.TableRows.setTableCell;
 
 public class TableView< T extends TableRow > extends JPanel
 {
@@ -103,6 +101,7 @@ public class TableView< T extends TableRow > extends JPanel
 	private SelectionMode selectionMode = SelectionMode.FocusOnly;
 	private Map< String, CategoryTableRowColumnColoringModel< T > > columnNameToColoringModel = new HashMap<>(  );
 	private boolean controlDown;
+	private ClassifyDialog dialog;
 
 	public enum SelectionMode
 	{
@@ -186,6 +185,9 @@ public class TableView< T extends TableRow > extends JPanel
 
 	public void showTableAndMenu()
 	{
+		final String appleMenuBarLaf = System.getProperty( "apple.laf.useScreenMenuBar" );
+		System.setProperty("apple.laf.useScreenMenuBar", "false");
+
 		configureJTable();
 
 		if ( selectionModel != null )
@@ -196,6 +198,9 @@ public class TableView< T extends TableRow > extends JPanel
 
 		createMenuBar();
 		showMenu( menuBar );
+
+		// reset
+		System.setProperty("apple.laf.useScreenMenuBar", appleMenuBarLaf);
 	}
 
 	private void configureTableRowColoring()
@@ -310,11 +315,6 @@ public class TableView< T extends TableRow > extends JPanel
 	private Color getColor( int rowInView, int columnInView )
 	{
 		final int row = jTable.convertRowIndexToModel( rowInView );
-
-//		if ( selectionModel.isFocused( tableRows.getTableRows().get( row ) ) )
-//		{
-//			return Color.BLUE;
-//		}
 
 		final ARGBType argbType = new ARGBType();
 		selectionColoringModel.convert( tableRowsModel.getRow( row ), argbType );
@@ -590,7 +590,10 @@ public class TableView< T extends TableRow > extends JPanel
 	{
 		final JMenuItem menuItem = new JMenuItem( "Start new annotation..." );
 
-		menuItem.addActionListener( e -> showNewAnnotationDialog() );
+		menuItem.addActionListener( e ->
+		{
+			showNewAnnotationDialog( );
+		} );
 
 		return menuItem;
 	}
@@ -598,15 +601,15 @@ public class TableView< T extends TableRow > extends JPanel
 	private JMenuItem createClassifyMenuItem()
 	{
 		final JMenuItem menuItem = new JMenuItem( "Classify..." );
+		dialog = new ClassifyDialog( () -> getColumnNames() );
 
 		menuItem.addActionListener( e ->
 		{
-			final ClassifyDialog dialog = new ClassifyDialog( () -> getColumnNames() );
 			if ( ! dialog.show() ) return; // cancelled
 
-			final WekaClassifier classifier = new WekaClassifier();
-			classifier.trainClassifier( tableRowsModel, dialog.getFeatureColumns(), dialog.getAnnotationColumn() );
-
+			final WekaClassifier weka = new WekaClassifier( tableRowsModel, dialog.getFeatureColumns(), dialog.getAnnotationColumn() );
+			final Classifier classifier = weka.train();
+			weka.predict( dialog.getPredictionColumn(), classifier );
 		} );
 
 		return menuItem;
@@ -630,21 +633,13 @@ public class TableView< T extends TableRow > extends JPanel
 		});
 	}
 
-	// TODO: Move to annotate package
 	public void showNewAnnotationDialog()
 	{
-		final GenericDialog gd = new GenericDialog( "" );
-		gd.addStringField( "Annotation column name", "Annotation", 30 );
-		gd.showDialog();
-		if( gd.wasCanceled() ) return;
-		final String columnName = gd.getNextString();
-		if ( getColumnNames().contains( columnName ) )
-		{
-			Logger.error( "The column \"" +columnName + "\" exists already, please choose another one." );
-			return;
-		}
-		tableRowsModel.addColumn( columnName, "None" );
-		continueAnnotation( columnName );
+		final AnnotationColumnNameSelectionDialog selectionDialog = new AnnotationColumnNameSelectionDialog( getColumnNames() );
+		if ( ! selectionDialog.show() ) return;
+		final String annotationColumnName = selectionDialog.getAnnotationColumnName();
+		tableRowsModel.addColumn( annotationColumnName, "None" );
+		continueAnnotation( annotationColumnName );
 	}
 
 	public void continueAnnotation( String columnName )
@@ -659,6 +654,7 @@ public class TableView< T extends TableRow > extends JPanel
 		selectionColoringModel.setColoringModel( columnNameToColoringModel.get( columnName ) );
 
 		final RowSorter< ? extends TableModel > rowSorter = jTable.getRowSorter();
+
 		final Annotator annotator = new Annotator(
 				columnName,
 				tableRowsModel,
@@ -672,9 +668,6 @@ public class TableView< T extends TableRow > extends JPanel
 
 	private void showMenu( JMenuBar menuBar )
 	{
-		final String appleMenuBarLaf = System.getProperty( "apple.laf.useScreenMenuBar" );
-		System.setProperty("apple.laf.useScreenMenuBar", "false");
-
 		frame = new JFrame( tableName );
 		frame.setJMenuBar( menuBar );
 		this.setOpaque( true );
@@ -698,9 +691,6 @@ public class TableView< T extends TableRow > extends JPanel
 		//Display the window.
 		frame.pack();
 		SwingUtilities.invokeLater( () -> frame.setVisible( true ) );
-
-		// reset
-		System.setProperty("apple.laf.useScreenMenuBar", appleMenuBarLaf);
 	}
 
 	public void addColumns( Map< String, List< String > > columns )

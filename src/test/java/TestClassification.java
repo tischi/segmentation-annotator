@@ -7,6 +7,7 @@ import net.imagej.ImageJ;
 import weka.classifiers.Classifier;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -32,23 +33,24 @@ public class TestClassification
 
 		final DefaultTableRowsModel< TableRowImageSegment > tableRowsModel = new DefaultTableRowsModel<>( imageSegments );
 
-		int rowIndex = 0;
 		final String annotationColumn = "Annotation";
-		tableRowsModel.addColumn( annotationColumn );
-		tableRowsModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
-		tableRowsModel.getRow( rowIndex++ ).setCell( annotationColumn, "Class A" );
-		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
-		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class B" );
-		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
-		tableRowsModel.getRow( rowIndex++  ).setCell( annotationColumn, "Class C" );
-
-		final WekaClassifier wekaClassifier = new WekaClassifier();
+		tableRowsModel.addColumn( annotationColumn, "None" );
+		final Iterator< TableRowImageSegment > iterator = tableRowsModel.iterator();
+		iterator.next().setCell( annotationColumn, "Class A" );
+		iterator.next().setCell( annotationColumn, "Class A" );
+		iterator.next().setCell( annotationColumn, "Class B" );
+		iterator.next().setCell( annotationColumn, "Class B" );
+		iterator.next().setCell( annotationColumn, "Class C" );
+		iterator.next().setCell( annotationColumn, "Class C" );
 
 		final Set< String > features = new HashSet<>();
 		features.add( "Golgi_Count" );
 		features.add( "Golgi_Mean_Area" );
-		final Classifier classifier = wekaClassifier.trainClassifier( tableRowsModel, features, annotationColumn );
-		wekaClassifier.predict( tableRowsModel, features, annotationColumn, "Prediction", classifier );
+
+		final WekaClassifier wekaClassifier = new WekaClassifier( tableRowsModel, features, annotationColumn );
+
+		final Classifier classifier = wekaClassifier.train();
+		wekaClassifier.predict( "Prediction", classifier );
 
 		for ( TableRowImageSegment tableRowImageSegment : tableRowsModel )
 		{

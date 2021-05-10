@@ -16,6 +16,7 @@ public class ClassifyDialog
 	private boolean[] isColumnSelectedArray;
 	private String[] columnNamesArray;
 	private int numColumns;
+	private String predictionColumn;
 
 	public ClassifyDialog( Supplier< Set< String > > columnNameSupplier )
 	{
@@ -26,6 +27,7 @@ public class ClassifyDialog
 	private void init()
 	{
 		annotationColumn = columnNames.get().iterator().next();
+		predictionColumn = "Prediction";
 		columnNamesArray = columnNames.get().toArray( new String[ 0 ] );
 		Arrays.sort( columnNamesArray );
 		numColumns = columnNamesArray.length;
@@ -40,7 +42,8 @@ public class ClassifyDialog
 
 		// annotation column
 		gd.addChoice( "Annotation column", columnNamesArray, annotationColumn );
-
+		gd.addStringField( "Prediction column", predictionColumn );
+		gd.addMessage( "Feature columns" );
 		// feature columns
 		final int sqrtN = (int) Math.ceil( Math.sqrt( numColumns ) );
 		gd.addCheckboxGroup( sqrtN, sqrtN, columnNamesArray, isColumnSelectedArray );
@@ -48,10 +51,8 @@ public class ClassifyDialog
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return false;
 
-		// annotation column
 		annotationColumn = gd.getNextChoice();
-
-		// feature columns
+		predictionColumn = gd.getNextString();
 		featureColumns = new HashSet< >();
 		for ( int i = 0; i < numColumns; i++ )
 		{
@@ -85,5 +86,10 @@ public class ClassifyDialog
 	{
 		// the order matter for the classification!
 		return featureColumns;
+	}
+
+	public String getPredictionColumn()
+	{
+		return predictionColumn;
 	}
 }
