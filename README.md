@@ -1,10 +1,18 @@
 # Segmentation annotator
 
-Fiji plugin for exploration and annotation of segmented images.
+Fiji plugin for inspection and annotation of segmented images.
+
+## Exploration
 
 <a href="https://youtu.be/EvAvqQKFkMQ"><img src="doc/segmented-image-exploration-youtube.png" width="185"></a>
-<a href="https://youtu.be/SOw_QtP0DsM"><img src="doc/3d-object-rendering-youtube.png" width="220"></a>
+
+## Annotation
+
 <a href="https://youtu.be/PMe4d6EpqGk"><img src="doc/object-annotation-youtube.png" width="200"></a>
+
+## 3D Object Rendering
+
+<a href="https://youtu.be/SOw_QtP0DsM"><img src="doc/3d-object-rendering-youtube.png" width="220"></a>
 
 ## Install
 
@@ -25,26 +33,18 @@ After installation (see above). You can run below ImageJ macros to launch the ap
 
 ## Run
 
-### Open label and intensity images
+After installation the following entries are available in the ImageJ menu:
 
-- `[ Plugins > Segmentation > Annotator > Open Intensity and Label Mask Images... ]`
-
-
-
-### Open data set from table
-
-- Download a demo data set:
-   - [Two segmented images (cells and golgi)](https://oc.embl.de/index.php/s/L4Kv5YgKgiMCFUe)
-- `[ Plugins > Segmentation > Annotator > Open Dataset from Table... ]`
-
-<img src="https://user-images.githubusercontent.com/2157566/101176937-7ba63480-3647-11eb-9952-543e153a99e5.png" width="700">
+- **[ Plugins > Segmentation > Annotator > Open Dataset from Table... ]**
+  - Experimental (Do not use yet).
+- **[ Plugins > Segmentation > Annotator > Open Intensity and Label Mask Image... ]**
+  - Allows you to select an intensity image and label mask image from the currently open images.
+  - It will automatically compute few basic features of the segmented objects. 
+- **[ Plugins > Segmentation > Annotator > Open Intensity and Label Mask Image and MorpholibJ Results Table... ]**
+  - As the command above but you can in addition select an object measurements table generated with [MorpholibJ](https://imagej.net/plugins/morpholibj).
 
 ## Use
 
 - Mouse: `Right click`: Shows a context menu through with most functionality can be accessed.
 - Mouse: `Ctrl + Left-Click`: Selects/Deselects the image segment at the location of the mouse pointer.
-
-## Annotate
-
-<img src="./doc/annotate.png" width="700">
 
