@@ -2,15 +2,21 @@
 
 Fiji plugin for inspection and annotation of segmented images.
 
-## Exploration
+## Social media
+
+- [Forum thread](https://forum.image.sc/t/segmented-image-exploration/52303)
+
+## Demonstration movies
+
+#### Explore
 
 <a href="https://youtu.be/EvAvqQKFkMQ"><img src="doc/segmented-image-exploration-youtube.png" width="185"></a>
 
-## Annotation
+#### Annotate
 
 <a href="https://youtu.be/PMe4d6EpqGk"><img src="doc/object-annotation-youtube.png" width="200"></a>
 
-## 3D Object Rendering
+#### Render Objects in 3D
 
 <a href="https://youtu.be/SOw_QtP0DsM"><img src="doc/3d-object-rendering-youtube.png" width="220"></a>
 
