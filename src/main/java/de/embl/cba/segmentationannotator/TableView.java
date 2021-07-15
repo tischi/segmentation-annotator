@@ -58,6 +58,7 @@ import de.embl.cba.tables.tablerow.TableRowsModel;
 import net.imglib2.type.numeric.ARGBType;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
+import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 import weka.classifiers.Classifier;
 
 import javax.swing.*;

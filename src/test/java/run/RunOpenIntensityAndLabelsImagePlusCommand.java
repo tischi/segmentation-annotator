@@ -1,6 +1,6 @@
 package run;
 
-import de.embl.cba.segmentationannotator.command.OpenIntensityAndLabelsImagePlusCommand;
+import de.embl.cba.segmentationannotator.command.ViewIntensityAndLabelsImagePlusCommand;
 import ij.IJ;
 import net.imagej.ImageJ;
 
@@ -11,7 +11,7 @@ public class RunOpenIntensityAndLabelsImagePlusCommand
 		ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
-		final OpenIntensityAndLabelsImagePlusCommand command = new OpenIntensityAndLabelsImagePlusCommand();
+		final ViewIntensityAndLabelsImagePlusCommand command = new ViewIntensityAndLabelsImagePlusCommand();
 		String root = "/Users/tischer/Documents/segmentations-explorer/";
 		command.intensityImage = IJ.openImage( root + "src/test/resources/intensity_image_3d.zip");
 		command.labelImage = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
