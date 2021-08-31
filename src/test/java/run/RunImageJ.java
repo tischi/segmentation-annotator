@@ -1,7 +1,5 @@
 package run;
 
-import de.embl.cba.segmentationannotator.command.OpenIntensityAndLabelsImagePlusCommand;
-import ij.IJ;
 import net.imagej.ImageJ;
 
 public class RunImageJ

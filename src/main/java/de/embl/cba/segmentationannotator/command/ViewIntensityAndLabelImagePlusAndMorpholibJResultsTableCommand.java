@@ -56,8 +56,8 @@ import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_X;
 import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_Y;
 import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_Z;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Annotator>Open Intensity and Label Mask Image and MorpholibJ Results Table..." )
-public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand implements Command
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Annotator>View Intensity and Label Mask Image and MorpholibJ Results Table..." )
+public class ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand implements Command
 {
 	public static final String LABEL = "Label";
 	public static final String COLUMN_NAME_LABEL_IMAGE_ID = "LabelImage";
@@ -75,6 +75,8 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 	@Parameter ( label = "MorpholibJ results table title" )
 	public String resultsTableTitle;
 
+	private List< TableRowImageSegment > tableRowImageSegments;
+
 	@Override
 	public void run()
 	{
@@ -86,15 +88,20 @@ public class OpenIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand impl
 		// create table
 		final ResultsTableFetcher tableFetcher = new ResultsTableFetcher();
 		ResultsTable resultsTable = tableFetcher.fetch( resultsTableTitle );
-		final List< TableRowImageSegment > tableRowImageSegments = createMLJTableRowImageSegments( resultsTable, labelImageId );
+		tableRowImageSegments = createMLJTableRowImageSegments( resultsTable, labelImageId );
 
 		// view
 		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
 	}
 
+	public List< TableRowImageSegment > getTableRowImageSegments()
+	{
+		return tableRowImageSegments;
+	}
+
 	private List< TableRowImageSegment > createMLJTableRowImageSegments( ResultsTable resultsTable, String labelImageId )
 	{
-		Map< String, List< String > > columns = TableColumns.columnsFromImageJ1ResultsTable( resultsTable );
+		Map< String, List< String > > columns = TableColumns.convertResultsTableToColumns( resultsTable );
 
 		columns = TableColumns.addLabelImageIdColumn(
 				columns,

@@ -40,8 +40,8 @@ import de.embl.cba.bdv.utils.popup.BdvPopupMenus;
 import de.embl.cba.segmentationannotator.bdv.SourcesAtMousePositionSupplier;
 import de.embl.cba.segmentationannotator.converter.LabelConverter;
 import de.embl.cba.segmentationannotator.converter.SegmentsConverter;
-import de.embl.cba.segmentationannotator.dialog.LabelMaskDisplayDialog;
-import de.embl.cba.segmentationannotator.dialog.VolumeViewConfigurationDialog;
+import de.embl.cba.segmentationannotator.label.LabelMaskDisplayDialog;
+import de.embl.cba.segmentationannotator.volume.VolumeViewConfigurationDialog;
 import de.embl.cba.segmentationannotator.label.LabelSource;
 import de.embl.cba.segmentationannotator.volume.SegmentsVolumeView;
 import de.embl.cba.tables.color.CategoryColoringModel;
@@ -52,11 +52,8 @@ import de.embl.cba.tables.imagesegment.LabelFrameAndImage;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.select.SelectionListener;
 import de.embl.cba.tables.select.SelectionModel;
-import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import ij.IJ;
 import ij.gui.GenericDialog;
-import ij3d.Image3DUniverse;
 import net.imglib2.RealPoint;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
@@ -75,7 +72,6 @@ import sc.fiji.bdvpg.services.SourceAndConverterServices;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 import sc.fiji.bdvpg.sourceandconverter.transform.SourceAffineTransformer;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -345,7 +341,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		actions.add( installStartNewAnnotationBehaviour() );
 		actions.add( installContinueAnnotationBehaviour() );
 		actions.add( installConfigureLabelMaskDisplayBehaviour() );
-		actions.add( installReportIssueBehaviour() );
+		//actions.add( installReportIssueBehaviour() );
 		//addMoveToPopupMenu();
 		//addAnimationSettingsPopupMenu();
 
@@ -383,7 +379,8 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private String installStartNewAnnotationBehaviour()
 	{
 		final String actionName = "Start New Annotation...";
-		sacService.registerAction( actionName, sourceAndConverters -> {tableView.showNewAnnotationDialog();}  );
+		sacService.registerAction( actionName, sourceAndConverters -> {
+			tableView.showNewAnnotationDialog();}  );
 		return actionName;
 	}
 
@@ -472,12 +469,12 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		return actionName;
 	}
 
-	private String installReportIssueBehaviour()
-	{
-		final String actionName = "Report an Issue...";
-		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
-		return actionName;
-	}
+//	private String installReportIssueBehaviour()
+//	{
+//		final String actionName = "Report an Issue...";
+//		sacService.registerAction( actionName, sourceAndConverters -> { reportIssueDialog(); }  );
+//		return actionName;
+//	}
 
 	private void addMoveToPopupMenu()
 	{
@@ -552,8 +549,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void shuffleRandomColors()
 	{
-		if ( ! isLabelSourceActive() ) return;
-
 		final ColoringModel< T > coloringModel = selectionColoringModel.getColoringModel();
 
 		if ( coloringModel instanceof CategoryColoringModel )
@@ -601,47 +596,45 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private synchronized void reportIssueDialog()
 	{
-		final RealPoint location = new RealPoint( 3 );
-		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( location );
-
-		GenericDialog gd = new GenericDialog( "Report issue" );
-		gd.addTextAreas( "", null, 5, 60 );
-
-		T segment = getSegmentAtMouseCoordinates();
-		if ( segment != null && segment instanceof TableRow )
-			gd.addCheckbox( "Add issue to image segment in table", true );
-
-		gd.showDialog();
-		if ( gd.wasCanceled() ) return;
-
-		IJ.log( "### Issue");
-		IJ.log( "Location (x,y,z,t):" );
-		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
-		IJ.log( "Issue:" );
-		String issue = gd.getNextText();
-		IJ.log( issue );
-
-		// TODO: below is a mess! Think of better separation of concerns
-		//  Maybe an image segment needs to have option to have more fields?
-		//  Such as Annotation and Issue? Or maybe a featureMap?!
-		if ( segment != null && segment instanceof TableRow && gd.getNextBoolean() )
-		{
-			if ( tableView != null )
-			{
-				if ( ! tableView.getColumnNames().contains( "Issue" ) )
-				{
-					tableView.addColumn( "Issue", "None" );
-				}
-			}
-
-			((TableRow) segment).setCell( "Issue", issue );
-		}
+//		final RealPoint location = new RealPoint( 3 );
+//		bdvHandle.getViewerPanel().getGlobalMouseCoordinates( location );
+//
+//		GenericDialog gd = new GenericDialog( "Report issue" );
+//		gd.addTextAreas( "", null, 5, 60 );
+//
+//		T segment = getSegmentAtMouseCoordinates();
+//		if ( segment != null && segment instanceof TableRow )
+//			gd.addCheckbox( "Add issue to image segment in table", true );
+//
+//		gd.showDialog();
+//		if ( gd.wasCanceled() ) return;
+//
+//		IJ.log( "### Issue");
+//		IJ.log( "Location (x,y,z,t):" );
+//		IJ.log( "" + location.getFloatPosition( 0 ) + "," + location.getFloatPosition( 1 ) + "," + location.getFloatPosition( 2 ) + "," + bdvHandle.getViewerPanel().state().getCurrentTimepoint() );
+//		IJ.log( "Issue:" );
+//		String issue = gd.getNextText();
+//		IJ.log( issue );
+//
+//		// TODO: below is a mess! Think of better separation of concerns
+//		//  Maybe an image segment needs to have option to have more fields?
+//		//  Such as Annotation and Issue? Or maybe a featureMap?!
+//		if ( segment != null && segment instanceof TableRow && gd.getNextBoolean() )
+//		{
+//			if ( tableView != null )
+//			{
+//				if ( ! tableView.getColumnNames().contains( "Issue" ) )
+//				{
+//					tableView.addColumn( "Issue", "None" );
+//				}
+//			}
+//
+//			((TableRow) segment).setCell( "Issue", issue );
+//		}
 	}
 
 	private synchronized void selectNone()
 	{
-		if ( ! isLabelSourceActive() ) return;
-
 		selectionModel.clearSelection( );
 
 		BdvUtils.repaint( bdvHandle );
@@ -677,39 +670,6 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 			recentFocus = segment;
 			selectionModel.focus( segment );
 		}
-	}
-
-//	public void select( List< Double > labelIds )
-//	{
-//		List< T > segments = getSegments( labelIds );
-//
-//		selectionModel.setSelected( segments, true );
-//	}
-//
-//	private List< T > getSegments( List< Double > labelIds )
-//	{
-//		final String labelImageId = labelsSource.metadata().imageId;
-//
-//		ArrayList< T > segments = new ArrayList<>(  );
-//
-//		for ( Double labelId : labelIds )
-//		{
-//			final LabelFrameAndImage labelFrameAndImage =
-//					new LabelFrameAndImage( labelId, getCurrentTimePoint(), labelImageId );
-//
-//			segments.add( labelFrameAndImageToSegment.get( labelFrameAndImage ) );
-//		}
-//		return segments;
-//	}
-
-	private boolean isLabelSourceActive()
-	{
-		return true;
-//		final Source< R > source = labelsSource.metadata().bdvStackSource.getSources().get( 0 ).getSpimSource();
-//
-//		final boolean active = BdvUtils.isActive( bdvHandle, source );
-//
-//		return active;
 	}
 
 	private Set< SourceAndConverter< R > > getLabelSources()

@@ -35,6 +35,7 @@ import de.embl.cba.tables.color.ColorUtils;
 import de.embl.cba.tables.select.SelectionModel;
 import de.embl.cba.tables.tablerow.TableRow;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
+import de.embl.cba.tables.tablerow.TableRowsModel;
 import ij.IJ;
 import net.imglib2.type.numeric.ARGBType;
 
@@ -43,7 +44,6 @@ import javax.swing.table.TableModel;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Annotator< T extends TableRow > extends JFrame
@@ -51,7 +51,7 @@ public class Annotator< T extends TableRow > extends JFrame
 	private static final String NO_MORE_SEGMENTS = "No more segments.";
 
 	private final String annotationColumnName;
-	private final List< T > tableRows;
+	private final TableRowsModel< T > tableRowsModel;
 	private final SelectionModel< T > selectionModel;
 	private final CategoryTableRowColumnColoringModel< T > coloringModel;
 	private final RowSorter< ? extends TableModel > rowSorter;
@@ -64,17 +64,18 @@ public class Annotator< T extends TableRow > extends JFrame
 	private JScrollPane annotationButtonsScrollPane;
 	private T currentlySelectedRow;
 	private Set< String > annotationNames;
+	private int currentlySelectedRowIndex;
 
-	public Annotator( String columnName, List< T > tableRows, SelectionModel< T > selectionModel, CategoryTableRowColumnColoringModel< T > coloringModel, RowSorter< ? extends TableModel > rowSorter )
+	public Annotator( String columnName, TableRowsModel< T > tableRowsModel, SelectionModel< T > selectionModel, CategoryTableRowColumnColoringModel< T > coloringModel, RowSorter< ? extends TableModel > rowSorter )
 	{
 		super("");
 		this.annotationColumnName = columnName;
 		this.annotationNames = new HashSet<>();
-		this.tableRows = tableRows;
+		this.tableRowsModel = tableRowsModel;
 		this.selectionModel = selectionModel;
 		this.coloringModel = coloringModel;
 		this.rowSorter = rowSorter;
-		this.currentlySelectedRow = tableRows.get( rowSorter.convertRowIndexToModel( 0 ) );
+		this.currentlySelectedRow = tableRowsModel.getRow( rowSorter.convertRowIndexToModel( 0 ) );
 		this.coloringModel.fixedColorMode( true );
 		this.panel = new JPanel();
 	}
@@ -244,14 +245,14 @@ public class Annotator< T extends TableRow > extends JFrame
 
 			// rowIndex in sorted "units"
 			int rowIndex = rowSorter.convertRowIndexToView( currentlySelectedRow.rowIndex() );
-			if ( rowIndex < tableRows.size() - 1 )
+			if ( rowIndex < tableRowsModel.size() - 1 )
 			{
 				T row = null;
 				if ( skipNone )
 				{
-					while ( rowIndex < tableRows.size() - 1 )
+					while ( rowIndex < tableRowsModel.size() - 1 )
 					{
-						row = tableRows.get( rowSorter.convertRowIndexToModel( ++rowIndex ) );
+						row = tableRowsModel.getRow( rowSorter.convertRowIndexToModel( ++rowIndex ) );
 						if ( isNoneOrNan( row ) )
 						{
 							row = null;
@@ -269,12 +270,12 @@ public class Annotator< T extends TableRow > extends JFrame
 						return; // All following rows are None or NaN
 					}
 
-					selectRow( row );
+					selectRow( row, rowIndex );
 				}
 				else
 				{
-					row = tableRows.get( rowSorter.convertRowIndexToModel( ++rowIndex ) );
-					selectRow( row );
+					row = tableRowsModel.getRow( rowSorter.convertRowIndexToModel( ++rowIndex ) );
+					selectRow( row, rowIndex );
 				}
 			}
 			else
@@ -304,7 +305,7 @@ public class Annotator< T extends TableRow > extends JFrame
 				{
 					while ( rowIndex > 0 )
 					{
-						row = tableRows.get( rowSorter.convertRowIndexToModel( --rowIndex ) );
+						row = tableRowsModel.getRow( rowSorter.convertRowIndexToModel( --rowIndex ) );
 						if ( isNoneOrNan( row ) )
 						{
 							row = null;
@@ -320,12 +321,12 @@ public class Annotator< T extends TableRow > extends JFrame
 						return; // None of the previous rows is not None
 					}
 
-					selectRow( row );
+					selectRow( row, rowIndex );
 				}
 				else
 				{
-					row = tableRows.get( rowSorter.convertRowIndexToModel( --rowIndex ) );
-					selectRow( row );
+					row = tableRowsModel.getRow( rowSorter.convertRowIndexToModel( --rowIndex ) );
+					selectRow( row, rowIndex );
 				}
 			}
 			else
@@ -346,18 +347,17 @@ public class Annotator< T extends TableRow > extends JFrame
 		{
 			isSingleRowBrowsingMode = true;
 			T selectedRow = getSelectedRow();
-			if ( selectedRow != null ) selectRow( selectedRow );
+			if ( selectedRow != null ) selectRow( selectedRow, tableRowsModel.indexOf( selectedRow ) );
 		} );
 		return button;
 	}
 
 	private T getSelectedRow()
 	{
-		// TODO: in principle a flaw in logic as it assumes that all tableRows are of same type...
-		if ( tableRows.get( 0 ) instanceof TableRowImageSegment )
+		if ( tableRowsModel.getRow( 0 ) instanceof TableRowImageSegment )
 		{
 			final double selectedLabelId = Double.parseDouble( goToRowIndexTextField.getText() );
-			for ( T tableRow : tableRows )
+			for ( T tableRow : tableRowsModel )
 			{
 				final double labelId = ( ( TableRowImageSegment ) tableRow ).labelId();
 				if ( labelId == selectedLabelId )
@@ -370,30 +370,20 @@ public class Annotator< T extends TableRow > extends JFrame
 		else
 		{
 			final int rowIndex = Integer.parseInt( goToRowIndexTextField.getText() );
-			return tableRows.get( rowSorter.convertRowIndexToModel( rowIndex ) );
+			return tableRowsModel.getRow( rowSorter.convertRowIndexToModel( rowIndex ) );
 		}
 	}
 
 	private boolean isNoneOrNan( T row )
 	{
-		return row.getCell( annotationColumnName ).toLowerCase().equals( "none" )
-				|| row.getCell( annotationColumnName ).toLowerCase().equals( "nan" );
+		return row.getCell( annotationColumnName ).equalsIgnoreCase( "none" )
+				|| row.getCell( annotationColumnName ).equalsIgnoreCase( "nan" );
 	}
 
-	private void selectRow( T row )
+	private void selectRow( T row, int rowIndex )
 	{
-		//currentlySelectedRowIndex = sortedRowIndex;
+		currentlySelectedRowIndex = rowIndex;
 		currentlySelectedRow = row;
-
-
-//		if ( isNoneOrNan( row ) )
-//		{
-//			selectionColoringModel.setSelectionColoringMode( SelectionColoringModel.SelectionColoringMode.SelectionColor );
-//		}
-//		else
-//		{
-//			selectionColoringModel.setSelectionColoringMode( SelectionColoringModel.SelectionColoringMode.OnlyShowSelected );
-//		}
 
 		selectionModel.clearSelection();
 		selectionModel.setSelected( row, true );
@@ -432,9 +422,9 @@ public class Annotator< T extends TableRow > extends JFrame
 		{
 			annotationToTableRow = new HashMap<>();
 
-			for ( int row = 0; row < tableRows.size(); row++ )
+			for ( int row = 0; row < tableRowsModel.size(); row++ )
 			{
-				final T tableRow = tableRows.get( row );
+				final T tableRow = tableRowsModel.getRow( row );
 				annotationToTableRow.put( tableRow.getCell( annotationColumnName ), tableRow );
 			}
 		}

@@ -26,8 +26,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > Open Intensity and Label Mask Image..." )
-public class OpenIntensityAndLabelsImagePlusCommand implements Command
+@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Intensity and Label Mask Image..." )
+public class ViewIntensityAndLabelsImagePlusCommand implements Command
 {
 	public static final String X = "mean_x";
 	public static final String Y = "mean_y";
