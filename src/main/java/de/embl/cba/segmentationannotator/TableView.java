@@ -74,8 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static de.embl.cba.tables.FileUtils.selectPathFromProjectOrFileSystem;
-import static de.embl.cba.tables.TableRows.setTableCell;
 import static de.embl.cba.tables.color.CategoryTableRowColumnColoringModel.DARK_GREY;
 
 public class TableView< T extends TableRow > extends JPanel
@@ -158,7 +156,7 @@ public class TableView< T extends TableRow > extends JPanel
 							addColumnToJTable( columnName, value );
 						}
 
-						setTableCell( tableModel.indexOf( tableRow ), columnName, value, getjTable() );
+						Tables.setJTableCell( tableModel.indexOf( tableRow ), columnName, value, getjTable() );
 					}
 				}
 			} );
@@ -486,9 +484,9 @@ public class TableView< T extends TableRow > extends JPanel
 
         menu.add( createSaveTableAsMenuItem() );
 
-		menu.add( createSaveColumnsAsMenuItem() );
+		// menu.add( createSaveColumnsAsMenuItem() );
 
-		menu.add( createLoadColumnsMenuItem() );
+		// menu.add( createLoadColumnsMenuItem() );
 
 		return menu;
     }
@@ -498,29 +496,29 @@ public class TableView< T extends TableRow > extends JPanel
 		additionalTables.add(tableName);
 	}
 
-	private JMenuItem createLoadColumnsMenuItem()
-	{
-		final JMenuItem menuItem = new JMenuItem( "Load Columns..." );
-		menuItem.addActionListener( e ->
-				SwingUtilities.invokeLater( () ->
-				{
-					try
-					{
-						String mergeByColumnName = getMergeByColumnName();
-						String tablePath = selectPathFromProjectOrFileSystem( tablesDirectory, "Table");
-						addAdditionalTable(tablePath);
-						Map< String, List< String > > newColumnsOrdered = TableUIs.loadColumns( jTable, tablePath, mergeByColumnName );
-						if ( newColumnsOrdered == null ) return;
-						newColumnsOrdered.remove( mergeByColumnName );
-						addColumns( newColumnsOrdered );
-					} catch ( IOException ioOException )
-					{
-						ioOException.printStackTrace();
-					}
-				} ) );
-
-		return menuItem;
-	}
+//	private JMenuItem createLoadColumnsMenuItem()
+//	{
+//		final JMenuItem menuItem = new JMenuItem( "Load Columns..." );
+//		menuItem.addActionListener( e ->
+//				SwingUtilities.invokeLater( () ->
+//				{
+//					try
+//					{
+//						String mergeByColumnName = getMergeByColumnName();
+//						String tablePath = selectPathFromProjectOrFileSystem( tablesDirectory, "Table");
+//						addAdditionalTable(tablePath);
+//						Map< String, List< String > > newColumnsOrdered = TableUIs.loadColumns( jTable, tablePath, mergeByColumnName );
+//						if ( newColumnsOrdered == null ) return;
+//						newColumnsOrdered.remove( mergeByColumnName );
+//						addColumns( newColumnsOrdered );
+//					} catch ( IOException ioOException )
+//					{
+//						ioOException.printStackTrace();
+//					}
+//				} ) );
+//
+//		return menuItem;
+//	}
 
 	private String getMergeByColumnName()
 	{

@@ -10,7 +10,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>segmentation-annotator</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 
 	<name>segmentation-annotator</name>
 	<description>Explore and annotate image segmentations</description>
@@ -86,9 +86,12 @@
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
 
         <!-- BIOP -->
-        <bigdataviewer-bioformats.version>0.2.15</bigdataviewer-bioformats.version>
-		<bigdataviewer-playground.version>0.2.14</bigdataviewer-playground.version>
+		<bigdataviewer-playground.version>0.3.8-SNAPSHOT</bigdataviewer-playground.version>
+		<bigdataviewer-selector.version>0.1.8</bigdataviewer-selector.version>
+		<bigvolumeviewer.version>0.2.0</bigvolumeviewer.version>
+		<mastodon.version>1.0.0-beta-17</mastodon.version>
 		<bigdataviewer-spimdata-extras.version>0.1.1</bigdataviewer-spimdata-extras.version>
+		<reflections.version>0.9.11</reflections.version>
 
 		<!-- EMBL CBA -->
         <imagej-utils.version>0.6.4-SNAPSHOT</imagej-utils.version>
@@ -128,6 +131,11 @@
 			<groupId>ch.epfl.biop</groupId>
 			<artifactId>bigdataviewer-bioformats</artifactId>
 			<version>${bigdataviewer-bioformats.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mastodon</groupId>
+			<artifactId>mastodon</artifactId>
+			<version>${mastodon.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
