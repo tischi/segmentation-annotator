@@ -37,14 +37,14 @@ public class ViewLabelMaskAndTwoIntensityImagePlusCommand implements Command
 	public static final String MEAN_INTENSITY = "mean_intensity";
 	public static final String INDEX = "label_index";
 
+	@Parameter( label = "Label Mask Image" )
+	public ImagePlus labelImage;
+
 	@Parameter( label = "Intensity Image" )
 	public ImagePlus intensityImage;
 
 	@Parameter( label = "Intensity Image" )
 	public ImagePlus intensityImage2;
-
-	@Parameter( label = "Label Mask Image" )
-	public ImagePlus labelImage;
 
 	@Override
 	public void run()

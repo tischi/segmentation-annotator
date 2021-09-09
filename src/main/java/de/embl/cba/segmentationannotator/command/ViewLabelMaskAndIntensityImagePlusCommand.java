@@ -39,12 +39,6 @@ public class ViewLabelMaskAndIntensityImagePlusCommand implements Command
 	@Parameter( label = "Intensity Image (optional)", required = false )
 	public ImagePlus intensityImage;
 
-	@Parameter( label = "Intensity Image 2 (optional)", required = false )
-	public ImagePlus intensityImage2;
-
-	@Parameter( label = "Intensity Image 3 (optional)", required = false )
-	public ImagePlus intensityImage3;
-
 	@Override
 	public void run()
 	{

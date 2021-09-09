@@ -4,7 +4,7 @@ import de.embl.cba.segmentationannotator.command.ViewLabelMaskAndTwoIntensityIma
 import ij.IJ;
 import net.imagej.ImageJ;
 
-public class RunOpenTwoIntensityAndLabelsImagePlusCommand
+public class RunOpenLabelMaskAndTwoIntensityImagePlusCommand
 {
 	public static void main( String[] args )
 	{
