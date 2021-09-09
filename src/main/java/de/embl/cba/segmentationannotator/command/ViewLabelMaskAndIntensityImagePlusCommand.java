@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Intensity and Label Mask Image..." )
-public class ViewIntensityAndLabelsImagePlusCommand implements Command
+public class ViewLabelMaskAndIntensityImagePlusCommand implements Command
 {
 	public static final String X = "mean_x";
 	public static final String Y = "mean_y";
@@ -48,23 +48,25 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	@Override
 	public void run()
 	{
-		// prepare images
+		final ArrayList< ImagePlus > intensityImages = new ArrayList<>();
+		intensityImages.add( intensityImage );
+		showImages( labelImage, intensityImages );
+	}
+
+	public static void showImages( ImagePlus labelImage, ArrayList< ImagePlus > intensityImages )
+	{
 		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
 
-		// label image
 		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
 
-		// intensity images
-		if ( intensityImage != null )
+		for ( ImagePlus intensityImage : intensityImages )
+		{
 			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
-		if ( intensityImage2 != null )
-			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage2 );
-		if ( intensityImage3 != null )
-			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage3 );
+		}
 
-		// compute labels and features
-		final Map< Integer, SegmentFeatures > labelToSegmentFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
-		Map< String, List< String > > segmentFeatureColumns = createColumns( labelToSegmentFeatures, labelImageId );
+		// create labels and features
+		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
+		Map< String, List< String > > segmentFeatureColumns = createColumns( labelToFeatures, labelImageId );
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( segmentFeatureColumns );
 
 		// create feature table
@@ -74,7 +76,7 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	}
 
 	@NotNull
-	private Map< SegmentProperty, List< String > > getSegmentPropertyToColumnName( Map< String, List< String > > columnNameToColumnEntries )
+	private static Map< SegmentProperty, List< String > > getSegmentPropertyToColumnName( Map< String, List< String > > columnNameToColumnEntries )
 	{
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = new HashMap<>();
 		segmentPropertyToColumnName.put( SegmentProperty.LabelImage, columnNameToColumnEntries.get( NAME ) );
@@ -86,7 +88,7 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	}
 
 	@NotNull
-	private Map< String, List< String > > createColumns( Map< Integer, SegmentFeatures > indexToFeatures, String labelImageName )
+	private static Map< String, List< String > > createColumns( Map< Integer, SegmentFeatures > indexToFeatures, String labelImageName )
 	{
 		Map< String, List< String > > columnNameToColumnEntries = new LinkedHashMap<>();
 		columnNameToColumnEntries.put( INDEX, new ArrayList< String >() );
