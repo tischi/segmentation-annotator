@@ -56,8 +56,8 @@ import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_X;
 import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_Y;
 import static de.embl.cba.tables.imagesegment.SegmentUtils.BB_MIN_Z;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Annotator>View Intensity and Label Mask Image and MorpholibJ Results Table..." )
-public class ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand implements Command
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Annotator>View Label Mask and Intensity Image and MorpholibJ Results Table..." )
+public class ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand implements Command
 {
 	public static final String LABEL = "Label";
 	public static final String COLUMN_NAME_LABEL_IMAGE_ID = "LabelImage";

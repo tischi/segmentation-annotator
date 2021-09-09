@@ -1,5 +1,5 @@
 import de.embl.cba.segmentationannotator.classify.WekaClassifier;
-import de.embl.cba.segmentationannotator.command.ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand;
+import de.embl.cba.segmentationannotator.command.ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand;
 import de.embl.cba.tables.tablerow.DefaultTableRowsModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.IJ;
@@ -23,7 +23,7 @@ public class TestClassification
 		// open results table
 		IJ.open( root + "src/test/resources/golgi-cell-features.csv");
 
-		final ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand command = new ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand();
+		final ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand command = new ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand();
 		command.intensityImage = IJ.openImage( root + "src/test/resources/golgi-intensities.tif");
 		command.labelImage = IJ.openImage( root + "src/test/resources/golgi-cell-labels.tif");
 		command.resultsTableTitle = "golgi-cell-features.csv";

@@ -1,6 +1,6 @@
 package run;
 
-import de.embl.cba.segmentationannotator.command.ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand;
+import de.embl.cba.segmentationannotator.command.ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand;
 import ij.IJ;
 import net.imagej.ImageJ;
 
@@ -16,7 +16,7 @@ public class RunOpenIntensityAndLabelsImagePlusAndMorpholibJResultsTableCommand
 		// open results table
 		IJ.open( root + "src/test/resources/golgi-cell-features.csv");
 
-		final ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand command = new ViewIntensityAndLabelImagePlusAndMorpholibJResultsTableCommand();
+		final ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand command = new ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand();
 		command.intensityImage = IJ.openImage( root + "src/test/resources/golgi-intensities.tif");
 		command.labelImage = IJ.openImage( root + "src/test/resources/golgi-cell-labels.tif");
 		command.resultsTableTitle = "golgi-cell-features.csv";
