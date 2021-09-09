@@ -15,8 +15,8 @@ public class RunOpenIntensityAndLabelsImagePlusCommand
 		ij.ui().showUI();
 
 		final ViewIntensityAndLabelsImagePlusCommand command = new ViewIntensityAndLabelsImagePlusCommand();
-		command.intensityImages = new ImagePlus[]{ IJ.openImage( root + "src/test/resources/intensity_image_3d.zip"), IJ.openImage( root + "src/test/resources/intensity_image_3d_downscaled.zip") };
-		command.labelImage = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
+		command.intensityImage = IJ.openImage( root + "src/test/resources/intensity_image_3d.zip");
+		command.intensityImage2 = IJ.openImage( root + "src/test/resources/label_image_3d.zip");
 
 		command.run();
 	}

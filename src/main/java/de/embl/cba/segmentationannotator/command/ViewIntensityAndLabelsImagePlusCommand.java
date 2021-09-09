@@ -33,11 +33,17 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	public static final String VOLUME = "volume";
 	public static final String INDEX = "label_index";
 
-	@Parameter( label = "Label Mask Image" )
+	@Parameter( label = "Label Mask Image (required)" )
 	public ImagePlus labelImage;
 
-	@Parameter( label = "Intensity Images" )
-	public ImagePlus[] intensityImages;
+	@Parameter( label = "Intensity Image (optional)", required = false )
+	public ImagePlus intensityImage;
+
+	@Parameter( label = "Intensity Image 2 (optional)", required = false )
+	public ImagePlus intensityImage2;
+
+	@Parameter( label = "Intensity Image 3 (optional)", required = false )
+	public ImagePlus intensityImage3;
 
 	@Override
 	public void run()
@@ -49,10 +55,12 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
 
 		// intensity images
-		for ( ImagePlus intensityImage : intensityImages )
-		{
+		if ( intensityImage != null )
 			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
-		}
+		if ( intensityImage2 != null )
+			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage2 );
+		if ( intensityImage3 != null )
+			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage3 );
 
 		// compute labels and features
 		final Map< Integer, SegmentFeatures > labelToSegmentFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
