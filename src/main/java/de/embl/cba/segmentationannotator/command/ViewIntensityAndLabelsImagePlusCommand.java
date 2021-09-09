@@ -35,10 +35,11 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	public static final String NAME = "image_name";
 	public static final String N_PIXELS = "n_pixels";
 	public static final String MEAN_INTENSITY = "mean_intensity";
+	public static final String VOLUME = "volume";
 	public static final String INDEX = "label_index";
 
-	@Parameter( label = "Intensity Image" )
-	public ImagePlus intensityImage;
+	@Parameter( label = "Intensity Images" )
+	public ImagePlus[] intensityImages;
 
 	@Parameter( label = "Label Mask Image" )
 	public ImagePlus labelImage;
@@ -46,20 +47,27 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	@Override
 	public void run()
 	{
-		// create images
+		// prepare images
 		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
+
+		// label image
 		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
-		ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
 
-		// create labels and features
-		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), intensityImage.getImageStack(), intensityImage.getCalibration() );
-		Map< String, List< String > > columns = createColumns( labelToFeatures, labelImageId );
-		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( columns );
+		// intensity images
+		for ( ImagePlus intensityImage : intensityImages )
+		{
+			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
+		}
 
-		// create table
-		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( columns, segmentPropertyToColumnName, true );
+		// compute labels and features
+		final Map< Integer, SegmentFeatures > labelToSegmentFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
+		Map< String, List< String > > segmentFeatureColumns = createColumns( labelToSegmentFeatures, labelImageId );
+		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( segmentFeatureColumns );
 
-		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
+		// create feature table
+		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( segmentFeatureColumns, segmentPropertyToColumnName, true );
+
+		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, labelImage.getNSlices() == 1, labelImage.getNFrames() );
 	}
 
 	@NotNull
@@ -84,7 +92,7 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 		columnNameToColumnEntries.put( Y, new ArrayList< String >() );
 		columnNameToColumnEntries.put( Z, new ArrayList< String >() );
 		columnNameToColumnEntries.put( N_PIXELS, new ArrayList< String >() );
-		columnNameToColumnEntries.put( MEAN_INTENSITY, new ArrayList< String >() );
+		columnNameToColumnEntries.put( VOLUME, new ArrayList< String >() );
 
 		for ( Integer labelIndex : indexToFeatures.keySet() )
 		{
@@ -94,29 +102,9 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 			columnNameToColumnEntries.get( X ).add( String.valueOf( features.anchorX ) );
 			columnNameToColumnEntries.get( Y ).add( String.valueOf( features.anchorY ) );
 			columnNameToColumnEntries.get( Z ).add( String.valueOf( features.anchorZ ) );
-			columnNameToColumnEntries.get( MEAN_INTENSITY ).add( String.valueOf( features.meanIntensity ) );
 			columnNameToColumnEntries.get( N_PIXELS ).add( String.valueOf( features.numPixels ) );
+			columnNameToColumnEntries.get( VOLUME ).add( String.valueOf( features.volume ) );
 		}
 		return columnNameToColumnEntries;
-	}
-
-	private SourceAndConverter getIntensitySourceAndConverter()
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > intensity = getter.apply( intensityImage );
-		final SourceAndConverter intensitySourceAndConverter = new SourceAndConverterFromSpimDataCreator( intensity ).getSetupIdToSourceAndConverter().get( 0 );
-		return intensitySourceAndConverter;
-	}
-
-	@NotNull
-	private SourceAndConverter getLabelSourceAndConverter()
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > labels = getter.apply( labelImage );
-		final SourceAndConverter labelSourceAndConverter = new SourceAndConverterFromSpimDataCreator( labels ).getSetupIdToSourceAndConverter().get( 0 );
-		LabelConverter labelConverter = new LabelConverter();
-		final LabelSource labelSource = new LabelSource<>( labelSourceAndConverter.getSpimSource() );
-		final SourceAndConverter sourceAndConverter = new SourceAndConverter<>( labelSource, labelConverter );
-		return sourceAndConverter;
 	}
 }

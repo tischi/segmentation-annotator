@@ -10,7 +10,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>segmentation-annotator</artifactId>
-	<version>0.1.1</version>
+	<version>0.2.0</version>
 
 	<name>segmentation-annotator</name>
 	<description>Explore and annotate image segmentations</description>
@@ -88,6 +88,7 @@
         <!-- BIOP -->
 		<bigdataviewer-playground.version>0.3.8-SNAPSHOT</bigdataviewer-playground.version>
 		<bigdataviewer-selector.version>0.1.8</bigdataviewer-selector.version>
+		<bigdataviewer-bioformats.version>0.2.15</bigdataviewer-bioformats.version>
 		<bigvolumeviewer.version>0.2.0</bigvolumeviewer.version>
 		<mastodon.version>1.0.0-beta-17</mastodon.version>
 		<bigdataviewer-spimdata-extras.version>0.1.1</bigdataviewer-spimdata-extras.version>
@@ -156,6 +157,16 @@
 			<groupId>org.scijava</groupId>
 			<artifactId>j3dcore</artifactId>
 			<version>${j3dcore.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.5.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
 		</dependency>
 	</dependencies>
 

@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class LabelAnalyzer
 {
-	public final static Map< Integer, SegmentFeatures > analyzeLabels( ImageStack labels, ImageStack intensities, Calibration calibration )
+	public final static Map< Integer, SegmentFeatures > analyzeLabels( ImageStack labels, Calibration calibration )
 	{
 		int sizeX = labels.getWidth();
 		int sizeY = labels.getHeight();
@@ -36,17 +36,18 @@ public class LabelAnalyzer
 					segmentFeatures.anchorX += x;
 					segmentFeatures.anchorY += y;
 					segmentFeatures.anchorZ += z;
-					segmentFeatures.meanIntensity += intensities.getVoxel( x, y, z );
+					//segmentFeatures.meanIntensity += intensities.getVoxel( x, y, z );
 				}
 			}
 		}
 
-		for ( SegmentFeatures features : indexToFeatures.values() )
+		for ( SegmentFeatures segmentFeatures : indexToFeatures.values() )
 		{
-			features.anchorX *= calibration.pixelWidth / features.numPixels ;
-			features.anchorY *= calibration.pixelHeight / features.numPixels;
-			features.anchorZ *= calibration.pixelDepth / features.numPixels;
-			features.meanIntensity /= features.numPixels;
+			segmentFeatures.anchorX *= calibration.pixelWidth / segmentFeatures.numPixels ;
+			segmentFeatures.anchorY *= calibration.pixelHeight / segmentFeatures.numPixels;
+			segmentFeatures.anchorZ *= calibration.pixelDepth / segmentFeatures.numPixels;
+			segmentFeatures.volume = segmentFeatures.numPixels * calibration.pixelWidth * calibration.pixelHeight * calibration.pixelDepth;
+			//features.meanIntensity /= features.numPixels;
 		}
 
 		return indexToFeatures;
