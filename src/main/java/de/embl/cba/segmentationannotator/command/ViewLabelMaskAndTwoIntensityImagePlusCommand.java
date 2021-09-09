@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Two Intensity and Label Mask Image..." )
-public class ViewTwoIntensityAndLabelImagePlusCommand implements Command
+public class ViewLabelMaskAndTwoIntensityImagePlusCommand implements Command
 {
 	public static final String X = "mean_x";
 	public static final String Y = "mean_y";
