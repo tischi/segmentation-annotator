@@ -26,8 +26,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Intensity and Label Mask Image..." )
-public class ViewIntensityAndLabelsImagePlusCommand implements Command
+@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Two Intensity and Label Mask Image..." )
+public class ViewTwoIntensityAndLabelImagePlusCommand implements Command
 {
 	public static final String X = "mean_x";
 	public static final String Y = "mean_y";
@@ -40,30 +40,45 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	@Parameter( label = "Intensity Image" )
 	public ImagePlus intensityImage;
 
+	@Parameter( label = "Intensity Image" )
+	public ImagePlus intensityImage2;
+
 	@Parameter( label = "Label Mask Image" )
 	public ImagePlus labelImage;
 
 	@Override
 	public void run()
 	{
-		// create images
+		final ArrayList< ImagePlus > intensityImages = new ArrayList<>();
+		intensityImages.add( intensityImage );
+		intensityImages.add( intensityImage2 );
+		showImages( labelImage, intensityImages );
+	}
+
+	public static void showImages( ImagePlus labelImage, ArrayList< ImagePlus > intensityImages )
+	{
 		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
+
 		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
-		ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
+
+		for ( ImagePlus intensityImage : intensityImages )
+		{
+			ImagePlusToSourceAndConverter.addIntensitySource( sources, intensityImage );
+		}
 
 		// create labels and features
-		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), intensityImage.getImageStack(), intensityImage.getCalibration() );
+		final Map< Integer, SegmentFeatures > labelToFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
 		Map< String, List< String > > columns = createColumns( labelToFeatures, labelImageId );
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( columns );
 
 		// create table
 		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( columns, segmentPropertyToColumnName, true );
 
-		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, intensityImage.getNSlices() == 1, intensityImage.getNFrames() );
+		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, labelImage.getNSlices() == 1, labelImage.getNFrames() );
 	}
 
 	@NotNull
-	private Map< SegmentProperty, List< String > > getSegmentPropertyToColumnName( Map< String, List< String > > columnNameToColumnEntries )
+	private static Map< SegmentProperty, List< String > > getSegmentPropertyToColumnName( Map< String, List< String > > columnNameToColumnEntries )
 	{
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = new HashMap<>();
 		segmentPropertyToColumnName.put( SegmentProperty.LabelImage, columnNameToColumnEntries.get( NAME ) );
@@ -75,7 +90,7 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	}
 
 	@NotNull
-	private Map< String, List< String > > createColumns( Map< Integer, SegmentFeatures > indexToFeatures, String labelImageName )
+	private static Map< String, List< String > > createColumns( Map< Integer, SegmentFeatures > indexToFeatures, String labelImageName )
 	{
 		Map< String, List< String > > columnNameToColumnEntries = new LinkedHashMap<>();
 		columnNameToColumnEntries.put( INDEX, new ArrayList< String >() );

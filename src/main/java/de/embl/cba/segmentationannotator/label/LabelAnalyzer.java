@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class LabelAnalyzer
 {
-	public final static Map< Integer, SegmentFeatures > analyzeLabels( ImageStack labels, ImageStack intensities, Calibration calibration )
+	public final static Map< Integer, SegmentFeatures > analyzeLabels( ImageStack labels, Calibration calibration )
 	{
 		int sizeX = labels.getWidth();
 		int sizeY = labels.getHeight();
@@ -36,7 +36,7 @@ public class LabelAnalyzer
 					segmentFeatures.anchorX += x;
 					segmentFeatures.anchorY += y;
 					segmentFeatures.anchorZ += z;
-					segmentFeatures.meanIntensity += intensities.getVoxel( x, y, z );
+					//segmentFeatures.meanIntensity += intensities.getVoxel( x, y, z );
 				}
 			}
 		}
@@ -46,7 +46,7 @@ public class LabelAnalyzer
 			features.anchorX *= calibration.pixelWidth / features.numPixels ;
 			features.anchorY *= calibration.pixelHeight / features.numPixels;
 			features.anchorZ *= calibration.pixelDepth / features.numPixels;
-			features.meanIntensity /= features.numPixels;
+			//features.meanIntensity /= features.numPixels;
 		}
 
 		return indexToFeatures;
