@@ -2,23 +2,18 @@ package de.embl.cba.segmentationannotator.command;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.segmentationannotator.ImagePlusToSourceAndConverter;
-import de.embl.cba.segmentationannotator.SourcesAndSegmentsViewer;
-import de.embl.cba.segmentationannotator.label.LabelSource;
 import de.embl.cba.segmentationannotator.SourceMetadata;
-import de.embl.cba.segmentationannotator.converter.LabelConverter;
+import de.embl.cba.segmentationannotator.SourcesAndSegmentsViewer;
 import de.embl.cba.segmentationannotator.label.LabelAnalyzer;
 import de.embl.cba.segmentationannotator.label.SegmentFeatures;
 import de.embl.cba.tables.imagesegment.SegmentProperty;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import ij.ImagePlus;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import org.jetbrains.annotations.NotNull;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import sc.fiji.bdvpg.sourceandconverter.importer.SourceAndConverterFromSpimDataCreator;
-import spimdata.imageplus.SpimDataFromImagePlusGetter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,11 +33,11 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	public static final String VOLUME = "volume";
 	public static final String INDEX = "label_index";
 
-	@Parameter( label = "Intensity Images" )
-	public ImagePlus[] intensityImages;
-
 	@Parameter( label = "Label Mask Image" )
 	public ImagePlus labelImage;
+
+	@Parameter( label = "Intensity Images" )
+	public ImagePlus[] intensityImages;
 
 	@Override
 	public void run()
