@@ -22,7 +22,7 @@ public class SwingImagePlusListWidget extends SwingInputWidget< ImagePlus[] > im
 
     @Override
     public boolean supports( final WidgetModel model ) {
-        return super.supports( model ) && model.isType( ij.ImagePlus[].class );
+        return super.supports( model ) && model.isType( ImagePlus[].class );
     }
 
     @Override

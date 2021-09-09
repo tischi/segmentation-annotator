@@ -34,7 +34,7 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 	public static final String INDEX = "label_index";
 
 	@Parameter( label = "Label Mask Image" )
-	public ImagePlus labelImage;
+	public ImagePlus[] labelImages;
 
 	@Parameter( label = "Intensity Images" )
 	public ImagePlus[] intensityImages;
@@ -46,7 +46,8 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 		Map< SourceAndConverter< ? >, SourceMetadata > sources = new HashMap<>();
 
 		// label image
-		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, labelImage );
+		final ImagePlus primaryLabelImage = labelImages[ 0 ];
+		final String labelImageId = ImagePlusToSourceAndConverter.addPrimaryLabelSource( sources, primaryLabelImage );
 
 		// intensity images
 		for ( ImagePlus intensityImage : intensityImages )
@@ -55,14 +56,14 @@ public class ViewIntensityAndLabelsImagePlusCommand implements Command
 		}
 
 		// compute labels and features
-		final Map< Integer, SegmentFeatures > labelToSegmentFeatures = LabelAnalyzer.analyzeLabels( labelImage.getImageStack(), labelImage.getCalibration() );
+		final Map< Integer, SegmentFeatures > labelToSegmentFeatures = LabelAnalyzer.analyzeLabels( primaryLabelImage.getImageStack(), primaryLabelImage.getCalibration() );
 		Map< String, List< String > > segmentFeatureColumns = createColumns( labelToSegmentFeatures, labelImageId );
 		Map< SegmentProperty, List< String > > segmentPropertyToColumnName = getSegmentPropertyToColumnName( segmentFeatureColumns );
 
 		// create feature table
 		final List< TableRowImageSegment > tableRowImageSegments = SegmentUtils.tableRowImageSegmentsFromColumns( segmentFeatureColumns, segmentPropertyToColumnName, true );
 
-		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, labelImage.getNSlices() == 1, labelImage.getNFrames() );
+		SourcesAndSegmentsViewer.view( sources, tableRowImageSegments, primaryLabelImage.getNSlices() == 1, primaryLabelImage.getNFrames() );
 	}
 
 	@NotNull
