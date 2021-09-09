@@ -99,7 +99,7 @@ public class ViewLabelMaskAndTwoIntensityImagePlusCommand implements Command
 		columnNameToColumnEntries.put( Y, new ArrayList< String >() );
 		columnNameToColumnEntries.put( Z, new ArrayList< String >() );
 		columnNameToColumnEntries.put( N_PIXELS, new ArrayList< String >() );
-		columnNameToColumnEntries.put( MEAN_INTENSITY, new ArrayList< String >() );
+		//columnNameToColumnEntries.put( MEAN_INTENSITY, new ArrayList< String >() );
 
 		for ( Integer labelIndex : indexToFeatures.keySet() )
 		{
@@ -109,29 +109,10 @@ public class ViewLabelMaskAndTwoIntensityImagePlusCommand implements Command
 			columnNameToColumnEntries.get( X ).add( String.valueOf( features.anchorX ) );
 			columnNameToColumnEntries.get( Y ).add( String.valueOf( features.anchorY ) );
 			columnNameToColumnEntries.get( Z ).add( String.valueOf( features.anchorZ ) );
-			columnNameToColumnEntries.get( MEAN_INTENSITY ).add( String.valueOf( features.meanIntensity ) );
 			columnNameToColumnEntries.get( N_PIXELS ).add( String.valueOf( features.numPixels ) );
+			//columnNameToColumnEntries.get( MEAN_INTENSITY ).add( String.valueOf( features.meanIntensity ) );
+
 		}
 		return columnNameToColumnEntries;
-	}
-
-	private SourceAndConverter getIntensitySourceAndConverter()
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > intensity = getter.apply( intensityImage );
-		final SourceAndConverter intensitySourceAndConverter = new SourceAndConverterFromSpimDataCreator( intensity ).getSetupIdToSourceAndConverter().get( 0 );
-		return intensitySourceAndConverter;
-	}
-
-	@NotNull
-	private SourceAndConverter getLabelSourceAndConverter()
-	{
-		final SpimDataFromImagePlusGetter getter = new SpimDataFromImagePlusGetter();
-		final AbstractSpimData< ? > labels = getter.apply( labelImage );
-		final SourceAndConverter labelSourceAndConverter = new SourceAndConverterFromSpimDataCreator( labels ).getSetupIdToSourceAndConverter().get( 0 );
-		LabelConverter labelConverter = new LabelConverter();
-		final LabelSource labelSource = new LabelSource<>( labelSourceAndConverter.getSpimSource() );
-		final SourceAndConverter sourceAndConverter = new SourceAndConverter<>( labelSource, labelConverter );
-		return sourceAndConverter;
 	}
 }
