@@ -33,9 +33,11 @@ public class ViewLabelMaskAndMultipleIntensityImagePlusCommand implements Comman
 	public static final String VOLUME = "volume";
 	public static final String INDEX = "label_index";
 
+	// autoFill = false is necessary, because pre-processors otherwise prevent the rendering of the UI element
 	@Parameter( label = "Label Mask Image", persist = false, autoFill = false )
 	public ImagePlus labelImage;
 
+	// persist = false is necessary, because pre-processors do not know how to handle ImagePlus[]
 	@Parameter( label = "Intensity Image", persist = false, autoFill = false )
 	public ImagePlus[] intensityImages;
 
