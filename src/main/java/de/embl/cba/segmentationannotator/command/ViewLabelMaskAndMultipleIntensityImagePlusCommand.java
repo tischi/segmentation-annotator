@@ -21,8 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-//@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Label Mask and Intensity Image..." )
-public class ViewLabelMaskAndIntensityImagePlusCommand implements Command
+@Plugin(type = Command.class, menuPath = "Plugins > Segmentation > Annotator > View Label Mask and Intensity Images..." )
+public class ViewLabelMaskAndMultipleIntensityImagePlusCommand implements Command
 {
 	public static final String X = "mean_x";
 	public static final String Y = "mean_y";
@@ -33,18 +33,20 @@ public class ViewLabelMaskAndIntensityImagePlusCommand implements Command
 	public static final String VOLUME = "volume";
 	public static final String INDEX = "label_index";
 
-	@Parameter( label = "Label Mask Image (required)" )
+	@Parameter( label = "Label Mask Image", persist = false, autoFill = false )
 	public ImagePlus labelImage;
 
-	@Parameter( label = "Intensity Image (optional)", required = false )
-	public ImagePlus intensityImage;
+	@Parameter( label = "Intensity Image", persist = false, autoFill = false )
+	public ImagePlus[] intensityImages;
 
 	@Override
 	public void run()
 	{
-		final ArrayList< ImagePlus > intensityImages = new ArrayList<>();
-		intensityImages.add( intensityImage );
-		showImages( labelImage, intensityImages );
+		final ArrayList< ImagePlus > intensityImageList = new ArrayList<>();
+		for ( ImagePlus intensityImage : intensityImages )
+			intensityImageList.add( intensityImage );
+
+		showImages( labelImage, intensityImageList );
 	}
 
 	public static void showImages( ImagePlus labelImage, ArrayList< ImagePlus > intensityImages )
