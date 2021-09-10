@@ -19,7 +19,7 @@ public class ViewLabelMaskAndTwoIntensityImagePlusCommand implements Command
 	@Parameter( label = "Intensity Image" )
 	public ImagePlus intensityImage;
 
-	@Parameter( label = "Intensity Image" )
+	@Parameter( label = "Intensity Image 2" )
 	public ImagePlus intensityImage2;
 
 	@Override
