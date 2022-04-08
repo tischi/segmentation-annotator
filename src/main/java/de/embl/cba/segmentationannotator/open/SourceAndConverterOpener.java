@@ -24,7 +24,7 @@ public class SourceAndConverterOpener
 	{
 		DebugTools.setRootLevel("OFF");
 		bridgeCommand = new OpenFilesWithBigdataviewerBioformatsBridgeCommand();
-		bridgeCommand.useBioFormatsCacheBlockSize = true;
+		//bridgeCommand.useBioFormatsCacheBlockSize = true;
 		bridgeCommand.unit = "MICROMETER";
 	}
 

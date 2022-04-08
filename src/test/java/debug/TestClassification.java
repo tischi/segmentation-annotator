@@ -1,3 +1,5 @@
+package debug;
+
 import de.embl.cba.segmentationannotator.classify.WekaClassifier;
 import de.embl.cba.segmentationannotator.command.ViewLabelMaskAndIntensityImagePlusAndMorpholibJResultsTableCommand;
 import de.embl.cba.tables.tablerow.DefaultTableRowsModel;
