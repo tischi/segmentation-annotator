@@ -1,6 +1,6 @@
 # Segmentation annotator
 
-Fiji plugin for inspection and annotation of segmented images.
+Segmentation Annotator is a Fiji plugin for the inspection and annotation of segmented images.
 
 ## Social media
 
