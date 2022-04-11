@@ -65,7 +65,7 @@ public class SegmentsTableOpener
 
 		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnNameToColumnEntries );
 
-		final List< TableRowImageSegment > segments = tableRowsCreator.getTableRowImageSegments();
+		final List< TableRowImageSegment > segments = tableRowsCreator.getSegments();
 
 		return segments;
 	}

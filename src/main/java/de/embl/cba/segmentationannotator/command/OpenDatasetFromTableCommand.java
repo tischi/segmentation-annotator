@@ -30,7 +30,6 @@ public class OpenDatasetFromTableCommand implements Command
 	@Parameter( label = "Segments table" )
 	public File segmentsTableFile;
 
-
 	@Parameter( label = "Image path column prefix" )
 	public String imagePathColumnPrefix = "Path_";
 

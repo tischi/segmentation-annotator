@@ -273,7 +273,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 	private void initSegments( List< T > segments )
 	{
-		this.labelFrameAndImageToSegment = SegmentUtils.createSegmentMap( segments );
+		labelFrameAndImageToSegment = SegmentUtils.createSegmentMap( segments );
 	}
 
 	private void registerAsColoringListener( ColoringModel< T > coloringModel )

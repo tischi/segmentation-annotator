@@ -44,7 +44,7 @@ public class SegmentsDatasetOpener implements Runnable
 
 		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnToValues );
 
-		segments = tableRowsCreator.getTableRowImageSegments();
+		segments = tableRowsCreator.getSegments();
 
 		String labelImageColumnName = tableRowsCreator.getLabelImageColumnName();
 
@@ -54,7 +54,7 @@ public class SegmentsDatasetOpener implements Runnable
 		sourceToMetadata = openSources( rootDirectory, columnNameToImagePaths );
 		sourceToMetadata.values().forEach( metadata ->
 		{
-			metadata.isLabelSource = metadata.groupId.contains( "label" );
+			metadata.isLabelSource = metadata.groupId.toLowerCase().contains( "label" );
 			metadata.isPrimaryLabelSource = metadata.groupId.contains( labelImageColumnName );
 		});
 	}
