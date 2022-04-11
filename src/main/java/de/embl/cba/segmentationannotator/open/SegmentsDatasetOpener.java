@@ -14,6 +14,7 @@ public class SegmentsDatasetOpener implements Runnable
 {
 	private String rootDirectory;
 	private String relativeTablePath;
+	private String imagePathColumnPrefix;
 	private HashMap< SourceAndConverter< ? >, SourceMetadata > sourceToMetadata;
 	private List< TableRowImageSegment > segments;
 
@@ -21,17 +22,17 @@ public class SegmentsDatasetOpener implements Runnable
 	 * groupId = imagePathColumnName
 	 * imageId = content of the cell of imagePathColumn
 	 * isPrimaryLabelSource = ( imagePathColumnName == labelImageColumnName )
-	 *
-	 * @param rootDirectory
+	 *  @param rootDirectory
 	 * 			The root directory of the dataset; paths to images in the table must be relative to this
 	 * @param relativeTablePath
 	 * 			The path to the segments table, relative to the root directory.
-	 * 			Each row in the table must contain information about one image segment
+	 * @param imagePathColumnPrefix
 	 */
-	public SegmentsDatasetOpener( String rootDirectory, String relativeTablePath )
+	public SegmentsDatasetOpener( String rootDirectory, String relativeTablePath, String imagePathColumnPrefix )
 	{
 		this.rootDirectory = rootDirectory;
 		this.relativeTablePath = relativeTablePath;
+		this.imagePathColumnPrefix = imagePathColumnPrefix;
 	}
 
 	@Override
@@ -39,15 +40,15 @@ public class SegmentsDatasetOpener implements Runnable
 	{
 		String tablePath = new File( rootDirectory, relativeTablePath ).toString();
 
-		Map< String, List< String > > columnNameToColumnEntries = TableColumns.stringColumnsFromTableFile( tablePath );
+		Map< String, List< String > > columnToValues = TableColumns.stringColumnsFromTableFile( tablePath );
 
-		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnNameToColumnEntries );
+		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnToValues );
 
-		final List< TableRowImageSegment > segments = tableRowsCreator.getTableRowImageSegments();
+		segments = tableRowsCreator.getTableRowImageSegments();
 
 		String labelImageColumnName = tableRowsCreator.getLabelImageColumnName();
 
-		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, "image_path_" );
+		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, imagePathColumnPrefix );
 		Map< String, Set< String > > columnNameToImagePaths = imagePathsExtractor.getColumnNameToImagePaths();
 
 		sourceToMetadata = openSources( rootDirectory, columnNameToImagePaths );

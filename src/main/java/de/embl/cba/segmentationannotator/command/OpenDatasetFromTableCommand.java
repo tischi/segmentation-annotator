@@ -30,14 +30,18 @@ public class OpenDatasetFromTableCommand implements Command
 	@Parameter( label = "Segments table" )
 	public File segmentsTableFile;
 
+
+	@Parameter( label = "Image path column prefix" )
+	public String imagePathColumnPrefix = "Path_";
+
 	@Override
 	public void run()
 	{
-		String rootDirectory = segmentsTableFile.getParent();
+		String rootDirectory = new File( segmentsTableFile.getAbsolutePath() ).getParent();
 		String relativeTablePath = segmentsTableFile.getName();
 
 		// open data
-		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, relativeTablePath );
+		SegmentsDatasetOpener opener = new SegmentsDatasetOpener( rootDirectory, relativeTablePath, imagePathColumnPrefix );
 		opener.run();
 
 		List< TableRowImageSegment > tableRowImageSegments = opener.getSegments();
