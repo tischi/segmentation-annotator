@@ -17,6 +17,7 @@ public class OpenMicrogliaDatasetFromTable
 		final OpenDatasetFromTableCommand command = new OpenDatasetFromTableCommand();
 		command.segmentsTableFile = new File( "src/test/resources/microglia/MAX_pg6-3CF1_20--t1-3.csv" );
 		command.imagePathColumnPrefix = "Path_";
+		command.objectPositionsAreCalibrated = false;
 		command.run();
 	}
 }

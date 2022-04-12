@@ -4,7 +4,6 @@ import de.embl.cba.tables.imagesegment.SegmentProperty;
 import de.embl.cba.tables.imagesegment.SegmentPropertyColumnsSelectionDialog;
 import de.embl.cba.tables.imagesegment.SegmentUtils;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
-import ij.gui.GenericDialog;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,7 +29,7 @@ public class InteractiveTableRowImageSegmentsFromColumnsCreator
 		final SegmentPropertyColumnsSelectionDialog selectionDialog = new SegmentPropertyColumnsSelectionDialog( columnNameToColumns.keySet() );
 		Map< SegmentProperty, String > segmentPropertyToColumnName = selectionDialog.fetchUserInput();
 
-		boolean isOneBasedTimePoint = isOneBasedTimePoint( segmentPropertyToColumnName );
+		boolean isOneBasedTimePoint = isOneBasedTimePoint( segmentPropertyToColumnName.get( SegmentProperty.T ) );
 		labelImageColumnName = segmentPropertyToColumnName.get( SegmentProperty.LabelImage );
 
 		final Map< SegmentProperty, List< String > > segmentPropertyToColumn = createSegmentPropertyToColumnMap( segmentPropertyToColumnName, columnNameToColumns );
@@ -38,12 +37,12 @@ public class InteractiveTableRowImageSegmentsFromColumnsCreator
 		segments = SegmentUtils.tableRowImageSegmentsFromColumns( columnNameToColumns, segmentPropertyToColumn, isOneBasedTimePoint );
 	}
 
-	private boolean isOneBasedTimePoint( Map< SegmentProperty, String > segmentPropertyToColumnName )
+	private boolean isOneBasedTimePoint( String timePointColumn )
 	{
 		boolean isOneBasedTimePoint = false;
-		if ( ! segmentPropertyToColumnName.get( SegmentProperty.T ).equals( NO_COLUMN_SELECTED ) )
+		if ( ! timePointColumn.equals( NO_COLUMN_SELECTED ) )
 		{
-			final Double minTimePoint = columnNameToColumns.get( segmentPropertyToColumnName.get( SegmentProperty.T ) ).stream().map( s -> Double.parseDouble( s ) ).min( Double::compare ).get();
+			final Double minTimePoint = columnNameToColumns.get( timePointColumn ).stream().map( s -> Double.parseDouble( s ) ).min( Double::compare ).get();
 			isOneBasedTimePoint = minTimePoint == 0 ? false : true;
 		}
 		return isOneBasedTimePoint;

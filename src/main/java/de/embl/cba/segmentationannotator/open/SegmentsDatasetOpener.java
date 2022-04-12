@@ -42,15 +42,14 @@ public class SegmentsDatasetOpener implements Runnable
 
 		Map< String, List< String > > columnToValues = TableColumns.stringColumnsFromTableFile( tablePath );
 
+		// segments
 		final InteractiveTableRowImageSegmentsFromColumnsCreator tableRowsCreator = new InteractiveTableRowImageSegmentsFromColumnsCreator( columnToValues );
-
 		segments = tableRowsCreator.getSegments();
 
+		// sources
 		String labelImageColumnName = tableRowsCreator.getLabelImageColumnName();
-
 		ImagePathsFromTableRowsExtractor< TableRowImageSegment > imagePathsExtractor = new ImagePathsFromTableRowsExtractor( segments, imagePathColumnPrefix );
 		Map< String, Set< String > > columnNameToImagePaths = imagePathsExtractor.getColumnNameToImagePaths();
-
 		sourceToMetadata = openSources( rootDirectory, columnNameToImagePaths );
 		sourceToMetadata.values().forEach( metadata ->
 		{
@@ -80,7 +79,6 @@ public class SegmentsDatasetOpener implements Runnable
 				} );
 				sourceToMetadata.putAll( sourcesFromPathToMetadata );
 			});
-
 
 			Logger.log( "...done in " + ( System.currentTimeMillis() - currentTimeMillis ) + " ms" );
 		} );

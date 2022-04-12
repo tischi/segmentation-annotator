@@ -10,7 +10,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>segmentation-annotator</artifactId>
-	<version>0.3.3</version>
+	<version>0.3.4</version>
 
 	<name>segmentation-annotator</name>
 	<description>Explore and annotate image segmentations</description>

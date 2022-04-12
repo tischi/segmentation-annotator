@@ -21,7 +21,7 @@ public class SourcesAndSegmentsViewer
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
 		// create image view
-		final SegmentedImagesView< ?, ? > imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sources );
+		final ImageView< ?, ? > imagesView = new ImageView( tableRowImageSegments, selectionColoringModel, sources );
 		imagesView.showImages( is2D, nFrames );
 
 		// table view

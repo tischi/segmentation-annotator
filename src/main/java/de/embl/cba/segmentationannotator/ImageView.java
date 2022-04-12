@@ -58,6 +58,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.RealTransform;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import org.jetbrains.annotations.NotNull;
@@ -77,8 +78,10 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static sc.fiji.bdvpg.bdv.BdvHandleHelper.getViewerTransformWithNewCenter;
+
 // TODO: reconsider what a "segment" needs to be here
-public class SegmentedImagesView< T extends ImageSegment, R extends NumericType< R > & RealType< R > >
+public class ImageView< T extends ImageSegment, R extends NumericType< R > & RealType< R > >
 {
 	public static final int BACKGROUND = 0;
 
@@ -104,16 +107,38 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	private TableView< TableRowImageSegment > tableView;
 	private SegmentsVolumeView< TableRowImageSegment > volumeView;
 	private SourceAndConverterService sacService;
+	private SourceAndConverter< R > primaryLabelSource;
+	private RealTransform segmentPositionTransform;
 
-	public SegmentedImagesView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > sourceToMetadata )
+	public ImageView( final List< T > imageSegments, final SelectionColoringModel< T > selectionColoringModel, final Map< SourceAndConverter< R >, SourceMetadata > rawSourceToMetadata )
 	{
 		this.selectionColoringModel = selectionColoringModel;
 		this.selectionModel = selectionColoringModel.getSelectionModel();
-		this.rawSourceToMetadata = sourceToMetadata;
+		this.rawSourceToMetadata = rawSourceToMetadata;
 
 		this.name = imageSegments.toString();
 
 		initSegments( imageSegments );
+	}
+
+	public void showImages()
+	{
+		int tMax = 0;
+		for ( T segments : labelFrameAndImageToSegment.values() )
+		{
+			if ( segments.timePoint() > tMax )
+				tMax = segments.timePoint();
+		}
+
+		long zDimMax = 1;
+		for ( SourceAndConverter< R > sourceAndConverter : rawSourceToMetadata.keySet() )
+		{
+			final long[] dimensions = sourceAndConverter.getSpimSource().getSource( 0, 0 ).dimensionsAsLongArray();
+			if ( dimensions[ 2 ] > zDimMax )
+				zDimMax = dimensions[ 2 ];
+		}
+
+		showImages( zDimMax == 1, tMax + 1 );
 	}
 
 	public void showImages( boolean is2D, int numTimePoints )
@@ -182,6 +207,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 			if ( metadata.isPrimaryLabelSource )
 			{
 				source = asPrimaryLabelSource( source, metadata.imageId );
+				primaryLabelSource = source;
 			}
 			else if ( metadata.isLabelSource )
 			{
@@ -190,6 +216,11 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 
 			sourceToMetadata.put( source, metadata );
 		} );
+	}
+
+	public SourceAndConverter< R > getPrimaryLabelSource()
+	{
+		return primaryLabelSource;
 	}
 
 	private SourceAndConverter< R > asPrimaryLabelSource( SourceAndConverter< R > source, String labelImageId )
@@ -271,7 +302,7 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 		bdvHandle.getConverterSetups().put( source, converterSetup );
 	}
 
-	private void initSegments( List< T > segments )
+	private void  initSegments( List< T > segments )
 	{
 		labelFrameAndImageToSegment = SegmentUtils.createSegmentMap( segments );
 	}
@@ -311,10 +342,17 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	{
 		final double[] position = new double[ 3 ];
 		imageSegment.localize( position );
+		if ( segmentPositionTransform != null )
+			segmentPositionTransform.apply( position, position );
+
+		final int currentTimepoint = bdvHandle.getViewerPanel().state().getCurrentTimepoint();
+
+		if ( currentTimepoint != imageSegment.timePoint() )
+			bdvHandle.getViewerPanel().state().setCurrentTimepoint( imageSegment.timePoint() );
 
 		new ViewerTransformChanger(
 				bdvHandle,
-				sc.fiji.bdvpg.bdv.BdvHandleHelper.getViewerTransformWithNewCenter( bdvHandle, position ),
+				getViewerTransformWithNewCenter( bdvHandle, position ),
 				false,
 				segmentFocusAnimationDurationMillis ).run();
 
@@ -741,5 +779,10 @@ public class SegmentedImagesView< T extends ImageSegment, R extends NumericType<
 	public void setTableView( TableView< TableRowImageSegment > tableView )
 	{
 		this.tableView = tableView;
+	}
+
+	public void setSegmentPositionTransform( RealTransform transform )
+	{
+		segmentPositionTransform = transform;
 	}
 }

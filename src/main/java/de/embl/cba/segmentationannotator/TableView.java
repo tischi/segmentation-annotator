@@ -796,9 +796,9 @@ public class TableView< T extends TableRow > extends JPanel
 		recentlySelectedRowInView = r;
 	}
 
-	private synchronized void moveToSelectedTableRow( TableRow selection )
+	private synchronized void moveToSelectedTableRow( T selection )
 	{
-		final int rowInView = jTable.convertRowIndexToView( selection.rowIndex() );
+		final int rowInView = jTable.convertRowIndexToView( tableRowsModel.indexOf( selection ) );
 
 		if ( rowInView == recentlySelectedRowInView ) return;
 

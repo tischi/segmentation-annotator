@@ -2,7 +2,7 @@ package de.embl.cba.segmentationannotator.command;
 
 import bdv.viewer.SourceAndConverter;
 import de.embl.cba.bdv.utils.lut.GlasbeyARGBLut;
-import de.embl.cba.segmentationannotator.SegmentedImagesView;
+import de.embl.cba.segmentationannotator.ImageView;
 import de.embl.cba.segmentationannotator.SourceMetadata;
 import de.embl.cba.segmentationannotator.TableView;
 import de.embl.cba.segmentationannotator.Utils;
@@ -12,6 +12,7 @@ import de.embl.cba.tables.color.SelectionColoringModel;
 import de.embl.cba.tables.select.DefaultSelectionModel;
 import de.embl.cba.tables.tablerow.TableRowImageSegment;
 import net.imagej.ImageJ;
+import net.imglib2.realtransform.AffineTransform3D;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -33,6 +34,9 @@ public class OpenDatasetFromTableCommand implements Command
 	@Parameter( label = "Image path column prefix" )
 	public String imagePathColumnPrefix = "Path_";
 
+	@Parameter( label = "Object positions are calibrated" )
+	public boolean objectPositionsAreCalibrated = true;
+
 	@Override
 	public void run()
 	{
@@ -52,12 +56,18 @@ public class OpenDatasetFromTableCommand implements Command
 		SelectionColoringModel< TableRowImageSegment > selectionColoringModel = new SelectionColoringModel<>( coloringModel, selectionModel );
 
 		// show data
-		SegmentedImagesView imagesView = new SegmentedImagesView( tableRowImageSegments, selectionColoringModel, sourceToMetadata );
-		imagesView.showImages( true, 1 );
-		Utils.centerComponentOnScreen( imagesView.getWindow(), 10 );
+		ImageView imageView = new ImageView( tableRowImageSegments, selectionColoringModel, sourceToMetadata );
+		imageView.showImages();
+		if ( ! objectPositionsAreCalibrated )
+		{
+			final AffineTransform3D affineTransform3D = new AffineTransform3D();
+			imageView.getPrimaryLabelSource().getSpimSource().getSourceTransform( 0, 0, affineTransform3D );
+			imageView.setSegmentPositionTransform( affineTransform3D );
+		}
+		Utils.centerComponentOnScreen( imageView.getWindow(), 10 );
 		TableView< TableRowImageSegment > tableView = new TableView<>( tableRowImageSegments, selectionModel, selectionColoringModel );
-		tableView.showTableAndMenu( imagesView.getWindow() );
-		imagesView.setTableView( tableView );
+		tableView.showTableAndMenu( imageView.getWindow() );
+		imageView.setTableView( tableView );
 	}
 
 	public static void main( String[] args )
