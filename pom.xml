@@ -10,7 +10,9 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>segmentation-annotator</artifactId>
-	<version>0.3.4</version>
+	<version>0.3.5</version>
+
+    <!-- mvn clean install -Denforcer.skip -Dscijava.app.directory=/Users/tischer/Desktop/Fiji/Fiji-SegmentationAnnotator.app/-->
 
 	<name>segmentation-annotator</name>
 	<description>Explore and annotate image segmentations</description>
@@ -42,9 +44,6 @@
 		</developer>
 	</developers>
 	<contributors>
-		<contributor>
-			<name>TODO</name>
-		</contributor>
 	</contributors>
 
 	<mailingLists>
@@ -73,15 +72,12 @@
 		<package-name>de.embl.cba</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
-		<scijava.app.directory>/Users/tischer/Desktop/Fiji/Fiji-SegmentationAnnotator.app/</scijava.app.directory>
-		<enforcer.skip>true</enforcer.skip>
 
         <!-- BIOP -->
 		<bigdataviewer-playground.version>0.4.1</bigdataviewer-playground.version>
 		<bigdataviewer-bioformats.version>0.2.23</bigdataviewer-bioformats.version>
-
 		<!-- EMBL CBA -->
-        <imagej-utils.version>0.6.4</imagej-utils.version>
+        <imagej-utils.version>0.6.5</imagej-utils.version>
 
 	</properties>
 

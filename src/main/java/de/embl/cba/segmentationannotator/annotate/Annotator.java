@@ -244,7 +244,7 @@ public class Annotator< T extends TableRow > extends JFrame
 			isSingleRowBrowsingMode = true;
 
 			// rowIndex in sorted "units"
-			int rowIndex = rowSorter.convertRowIndexToView( currentlySelectedRow.rowIndex() );
+			int rowIndex = rowSorter.convertRowIndexToView( tableRowsModel.indexOf( currentlySelectedRow ) );
 			if ( rowIndex < tableRowsModel.size() - 1 )
 			{
 				T row = null;
@@ -297,7 +297,7 @@ public class Annotator< T extends TableRow > extends JFrame
 			isSingleRowBrowsingMode = true;
 
 			// row index in sorted "units"
-			int rowIndex = rowSorter.convertRowIndexToView( currentlySelectedRow.rowIndex() );
+			int rowIndex = rowSorter.convertRowIndexToView( tableRowsModel.indexOf( currentlySelectedRow ) );
 			if ( rowIndex > 0 )
 			{
 				T row = null;
